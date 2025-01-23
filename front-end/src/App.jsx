@@ -4,9 +4,10 @@ import { Login } from "./routes";
 import "./css/index.css";
 
 function App() {
+  
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<Login  />} />
     </Routes>
   );
 }
