@@ -4,6 +4,7 @@ import { Login, Register } from "./routes";
 import "./css/index.css";
 
 function App() {
+  
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
