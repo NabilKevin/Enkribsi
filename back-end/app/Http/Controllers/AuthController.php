@@ -62,7 +62,7 @@ class AuthController extends Controller
             'username'=> 'required|string|max:255|unique:users,username',
             'password'=> 'required|string',
             'email'=> 'required|email|unique:users,email',
-            'face_img' => 'image|mimes:jpeg,png,jpg|max:2048'
+            'face_img' => 'required|string'
         ]);
 
         if($validator->fails()) {
@@ -72,19 +72,36 @@ class AuthController extends Controller
             ],422);
         }
 
-        $data = $request->all->except('face_img');
+        $data = $request->only(['username', 'password', 'email']);
 
-        $image = $request->face_img;
+        $fileName = null;
 
-        $imgname = time() . ".$image->getClientOriginalExtension";
-        $image->storeAs('/image', $imgname);
+        $base64Image = $request->input('face_img');
 
-        $data['face_img'] = $imgname;
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+            $base64Image = substr($base64Image, strpos($base64Image, ',') + 1);
+            $type = strtolower($type[1]); // jpg, png, gif, dll.
+
+            // Dekode Base64 menjadi binary
+            $image = base64_decode($base64Image);
+
+            // Nama file unik
+            $fileName = time() . uniqid() . '.' . $type;
+
+            // Simpan file di storage (misalnya, public/photos)
+            $path = public_path('storage/photos/' . $fileName);
+            file_put_contents($path, $image);
+        } else {
+            return response()->json(['error' => 'Invalid image data'], 400);
+        }
+
+        $data['face_img'] = $fileName;
 
         $user = User::create($data);
 
         $token = $user->createToken('login')->plainTextToken;
         $user['token'] = $token;
+        Auth::login($user);
 
         return response()->json([
             'message'=> 'Register successful',
