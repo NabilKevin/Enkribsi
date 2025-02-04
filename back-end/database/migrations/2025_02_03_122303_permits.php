@@ -11,15 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('statistics', function (Blueprint $table) {
+        Schema::create('permits', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->integer('absen')->default(0);
-            $table->integer('telat')->default(0);
-            $table->integer('alfa')->default(0);
+            $table->text('alasan');
+            $table->unsignedBigInteger('pimpinan_id');
+            $table->boolean('is_approved')->default(null)->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('pimpinan_id')->references('id')->on('bods');
         });
     }
 
@@ -28,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('statistics');
+        Schema::dropIfExists('approval_perizinan');
     }
 };

@@ -56,57 +56,5 @@ class AuthController extends Controller
             ],404);
         }
     }
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'username'=> 'required|string|max:255|unique:users,username',
-            'password'=> 'required|string',
-            'email'=> 'required|email|unique:users,email',
-            'face_img' => 'required|string'
-        ]);
-
-        if($validator->fails()) {
-            return response()->json([
-                'message'=> 'Invalid fields',
-                'errors'=> $validator->errors()
-            ],422);
-        }
-
-        $data = $request->only(['username', 'password', 'email']);
-
-        $fileName = null;
-
-        $base64Image = $request->input('face_img');
-
-        if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
-            $base64Image = substr($base64Image, strpos($base64Image, ',') + 1);
-            $type = strtolower($type[1]); // jpg, png, gif, dll.
-
-            // Dekode Base64 menjadi binary
-            $image = base64_decode($base64Image);
-
-            // Nama file unik
-            $fileName = time() . uniqid() . '.' . $type;
-
-            // Simpan file di storage (misalnya, public/photos)
-            $path = public_path('storage/photos/' . $fileName);
-            file_put_contents($path, $image);
-        } else {
-            return response()->json(['error' => 'Invalid image data'], 400);
-        }
-
-        $data['face_img'] = $fileName;
-
-        $user = User::create($data);
-
-        $token = $user->createToken('login')->plainTextToken;
-        $user['token'] = $token;
-        Auth::login($user);
-
-        return response()->json([
-            'message'=> 'Register successful',
-            'user'=> $user
-        ],200);
-    }
 
 }

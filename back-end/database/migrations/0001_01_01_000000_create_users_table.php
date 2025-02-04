@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('username', 50)->unique();
             $table->string('password');
             $table->string('face_img');
+            $table->enum('role', ['admin', 'user', 'bod', 'hr'])->default('user');
+            $table->string('pimpinan')->nullable();
             $table->timestamps();
         });
 
