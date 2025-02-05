@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('permits', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->text('alasan');
-            $table->unsignedBigInteger('pimpinan_id');
+            $table->text('reason');
+            $table->unsignedBigInteger('leader_id');
             $table->boolean('is_approved')->default(null)->nullable();
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('pimpinan_id')->references('id')->on('bods');
+            $table->foreign('leader_id')->references('id')->on('users');
         });
     }
 

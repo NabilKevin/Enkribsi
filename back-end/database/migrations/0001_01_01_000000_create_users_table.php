@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('password');
             $table->string('face_img');
             $table->enum('role', ['admin', 'user', 'bod', 'hr'])->default('user');
-            $table->string('pimpinan')->nullable();
             $table->timestamps();
         });
 
@@ -38,7 +37,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
     }
 };

@@ -1,6 +1,10 @@
 <?php
 
+use App\Http\Controllers\AbsenController;
 use Illuminate\Http\Request;
+use App\Http\Middleware\isHR;
+use App\Http\Middleware\isBOD;
+use App\Http\Middleware\isAdmin;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
@@ -8,10 +12,29 @@ use App\Http\Controllers\AuthController;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::post('/forgotpassword', action: [AuthController::class, 'forgotPassword']);
-    Route::post('/checktokenforgotpassword', action: [AuthController::class, 'checkTokenForgotPassword']);
-    Route::post('/resetpassword', action: [AuthController::class, 'resetPassword']);
+Route::middleware('guest')->group(function () {
+    Route::prefix('auth')->group(function () {
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/forgotpassword', action: [AuthController::class, 'forgotPassword']);
+        Route::post('/forgotpasswordtoken', action: [AuthController::class, 'checkTokenForgotPassword']);
+        Route::post('/resetpassword', action: [AuthController::class, 'resetPassword']);
+    });
+});
+
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(isAdmin::class)->group(function () {
+
+    });
+    Route::middleware(isHR::class)->group(function () {
+
+    });
+    Route::middleware(isBOD::class)->group(function () {
+
+    });
+
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::post('/checklocation', [AbsenController::class, 'checkLocation']);
+    Route::post('/absent', [AbsenController::class, 'absent']);
 });

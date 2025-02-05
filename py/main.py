@@ -1,7 +1,7 @@
 import face_recognition
 import sys
-import json
 import os
+import json
 
 def recognize_and_validate(input_image_path, reference_image_path):
     try:
@@ -29,8 +29,9 @@ def recognize_and_validate(input_image_path, reference_image_path):
 
         # Kembalikan hasil
         return {
-            "match": results[0],
-            "distance": distance,
+            'status': "successful" if results[0] else "unsuccessful",
+            # "match": results[0],
+            # "distance": distance,
             "message": "Face matched!" if results[0] else "Face did not match."
         }
 
@@ -57,4 +58,7 @@ if __name__ == "__main__":
 
     # Lakukan pengenalan dan validasi wajah
     result = recognize_and_validate(input_image_path, reference_image_path)
-    print(result)
+
+    json_data = json.dumps(result)
+
+    print(json_data)

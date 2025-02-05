@@ -21,6 +21,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
+                'status' => 'unsuccesful',
                 'message' => 'Invalid fields',
                 'errors' => $validator->errors()
             ], 422);
@@ -28,18 +29,19 @@ class AuthController extends Controller
 
         $data = $request->all();
 
-
         if(Auth::attempt($data)) {
             $user = User::firstWhere('username', $data['username']);
             $token = $user->createToken('login')->plainTextToken;
             $user['token'] = $token;
 
             return response()->json([
+                'status' => 'successful',
                 'message' => 'Login successful',
                 'user'=> $user
             ], 200);
         } else {
             return response()->json([
+                'status' => 'unsuccesful',
                 'message' => 'Username or password is incorrect'
             ], 401);
         }
@@ -51,10 +53,12 @@ class AuthController extends Controller
         if($user) {
             $user->delete();
             return response()->json([
+                'status' => 'successful',
                 'message'=> 'Logout successful'
                 ],200);
         } else {
             return response()->json([
+                'status'=> 'unsuccesful',
                 'message'=> 'User not found'
             ],404);
         }
@@ -68,6 +72,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
+                'status' => 'unsuccesful',
                 'message' => 'Invalid fields',
                 'errors' => $validator->errors()
             ], 422);
@@ -94,10 +99,12 @@ class AuthController extends Controller
             sendEmail($request->email, $data);
 
             return response()->json([
+                'status' => 'successful',
                 'message' => 'Email sent'
             ], 200);
         } else {
             return response()->json([
+                'status' => 'unsuccesful',
                 'message' => 'User not found'
             ], 404);
         }
@@ -112,6 +119,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
+                'status' => 'unsuccesful',
                 'message' => 'Invalid fields',
                 'errors' => $validator->errors()
             ], 422);
@@ -122,16 +130,19 @@ class AuthController extends Controller
         if($passwordReset) {
             if(Carbon::parse($passwordReset->created_at)->addMinutes(15)->isFuture()) {
                 return response()->json([
+                    'status' => 'successful',
                     'message' => 'Token is valid'
                 ], 200);
             } else {
                 $passwordReset->delete();
                 return response()->json([
+                    'status' => 'unsuccesful',
                     'message' => 'Token is expired'
                 ], 401);
             }
         } else {
             return response()->json([
+                'status' => 'unsuccesful',
                 'message' => 'Token is invalid'
             ], 401);
         }
@@ -147,6 +158,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
+                'status' => 'unsuccesful',
                 'message' => 'Invalid fields',
                 'errors' => $validator->errors()
             ], 422);
@@ -163,15 +175,18 @@ class AuthController extends Controller
                     'password' => bcrypt($request->password)
                 ]);
                 return response()->json([
+                    'status' => 'successful',
                     'message' => 'Password reset successful'
                 ], 200);
             } else {
                 return response()->json([
+                    'status' => 'unsuccesful',
                     'message' => 'Token is invalid'
                 ], 401);
             }
         } else {
             return response()->json([
+                'status' => 'unsuccesful',
                 'message' => 'User not found'
             ], 404);
         }
