@@ -10,6 +10,8 @@ use App\Http\Controllers\AuthController;
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/register', [AuthController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/forgotpassword', action: [AuthController::class, 'forgotPassword']);
+    Route::post('/checktokenforgotpassword', action: [AuthController::class, 'checkTokenForgotPassword']);
+    Route::post('/resetpassword', action: [AuthController::class, 'resetPassword']);
 });
