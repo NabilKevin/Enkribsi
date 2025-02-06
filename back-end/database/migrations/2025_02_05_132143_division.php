@@ -11,18 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('permits', function (Blueprint $table) {
+        Schema::create('divisions', callback: function (Blueprint $table) {
             $table->id();
+            $table->enum('name', ['admin', 'user', 'bod', 'hr'])->default('user');
             $table->unsignedBigInteger('user_id');
-            $table->text('reason');
-            $table->unsignedBigInteger('leader_id');
-            $table->text('bod_reason')->nullable()->default(null);
-            $table->boolean('is_approved')->nullable()->default(null);
-            $table->date('date');
-            $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('leader_id')->references('id')->on('users');
+            $table->timestamps();
         });
     }
 
@@ -31,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('approval_perizinan');
+        Schema::dropIfExists('divisions');
     }
 };

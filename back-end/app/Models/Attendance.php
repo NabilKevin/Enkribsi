@@ -7,4 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Attendance extends Model
 {
     protected $guarded = ['id'];
+
+    public function office()
+    {
+        return $this->belongsTo( Office::class, 'office_id', 'id' );
+    }
 }

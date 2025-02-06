@@ -49,19 +49,11 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $user = User::firstWhere('username', $request->username);
-        if($user) {
-            $user->delete();
-            return response()->json([
-                'status' => 'successful',
-                'message'=> 'Logout successful'
-                ],200);
-        } else {
-            return response()->json([
-                'status'=> 'unsuccesful',
-                'message'=> 'User not found'
-            ],404);
-        }
+        $request->user()->currentAccessToken()->delete();
+        return response()->json([
+            'status' => 'successful',
+            'message'=> 'Logout successful'
+        ],200);
     }
 
     public function forgotPassword(Request $request)

@@ -31,10 +31,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
     Route::middleware(isBOD::class)->group(function () {
-
+        Route::post('/accpermit/{id}', [AbsenController::class, 'approvePermit']);
+        Route::post('/denypermit/{id}', [AbsenController::class, 'denyPermit']);
     });
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::post('/checklocation', [AbsenController::class, 'checkLocation']);
     Route::post('/absent', [AbsenController::class, 'absent']);
+    Route::post('/permit', [AbsenController::class, 'storePermit']);
+    Route::post('/leave', [AbsenController::class, 'leave']);
+    Route::get('/presence', [AbsenController::class, 'getPresence']);
 });
