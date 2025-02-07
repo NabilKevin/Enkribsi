@@ -15,9 +15,9 @@ def recognize_and_validate(input_image_path, reference_image_path):
 
         # Periksa apakah ada wajah di kedua gambar
         if len(input_encodings) == 0:
-            return {"error": "No face found in the input image."}
+            return {"error": "No face found in the input image.", 'status': "unsuccessful"}
         if len(reference_encodings) == 0:
-            return {"error": "No face found in the reference image."}
+            return {"error": "No face found in the reference image.", 'status': "unsuccessful"}
 
         # Ambil encoding wajah pertama
         input_encoding = input_encodings[0]
@@ -41,7 +41,7 @@ def recognize_and_validate(input_image_path, reference_image_path):
 if __name__ == "__main__":
     # Pastikan ada 2 argumen: gambar input dan gambar referensi
     if len(sys.argv) < 3:
-        print(json.dumps({"error": "Usage: python3 recognize_face.py <input_image_path> <reference_image_path>"}))
+        print(json.dumps({"error": "Usage: python3 recognize_face.py <input_image_path> <reference_image_path>", 'status': "unsuccessful"}))
         sys.exit(1)
 
     input_image_path = sys.argv[1]
@@ -49,11 +49,11 @@ if __name__ == "__main__":
 
     # Pastikan kedua file gambar ada
     if not os.path.exists(input_image_path):
-        print(json.dumps({"error": f"Input image not found: {input_image_path}"}))
+        print(json.dumps({"error": f"Input image not found: {input_image_path}", 'status': "unsuccessful"}))
         sys.exit(1)
 
     if not os.path.exists(reference_image_path):
-        print(json.dumps({"error": f"Reference image not found: {reference_image_path}"}))
+        print(json.dumps({"error": f"Reference image not found: {reference_image_path}", 'status': "unsuccessful"}))
         sys.exit(1)
 
     # Lakukan pengenalan dan validasi wajah

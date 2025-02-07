@@ -3,8 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Division;
+use App\Models\Office;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Schedule;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -20,6 +21,12 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+        Office::create([
+            'name' => 'Enkripa - Haji Nawi',
+            'latitude' => -6.263425131989862,
+            'longitude' => 106.78862020452657,
+            'radius' => 100
+        ]);
         User::create([
             'email' => 'agungpranomo@gmail.com',
             'username' => 'Agung Pranomo',
@@ -40,7 +47,14 @@ class DatabaseSeeder extends Seeder
             'leader_id' => 1
         ]);
         Division::create([
-            'user_id' => 2
+            'user_id' => 2,
+        ]);
+        Schedule::create([
+            'office_id' => 1,
+            'work_start_time' => '09:00:00',
+            'work_end_time' => '18:00:00',
+            'expired_date' => null,
+            'status' => 'active'
         ]);
     }
 }

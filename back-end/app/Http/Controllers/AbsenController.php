@@ -76,6 +76,13 @@ class AbsenController extends Controller
             ], 422);
         }
 
+        if(!$request->user()->face_img) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'You have not uploaded your face image'
+            ], 403);
+        }
+
         $isAbsent = Attendance::where('user_id', $request->user()->id)
             ->where('date', Carbon::now()->toDateString())
             ->where('status', 'absen')
@@ -168,90 +175,9 @@ class AbsenController extends Controller
         ], 200);
     }
 
-    public function denyPermit(Request $request, $id)
-    {
-        $permit = Permit::find($id);
-
-        $user = User::find($permit->user_id);
-        $me = Division::find($request->user()->id);
-        if($user->leader_id !== $me->id) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'You are not the leader of this user'
-            ], 403);
-        }
-        if($permit->is_approved) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Permit has been approved'
-            ], 403);
-        }
-        if($permit->is_approved === false) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Permit has been denied'
-            ], 403);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'bod_reason' => 'required|string'
-        ]);
-
-        if($validator->fails()) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Invalid fields',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $permit->update([
-            'is_approved' => false,
-            'bod_reason' => $request->bod_reason
-        ]);
-        return response()->json([
-            'status' => 'successful',
-            'message' => 'Permit successfuly denied',
-            'data' => $permit
-        ], 200);
-    }
-    public function approvePermit(Request $request, $id)
-    {
-        $permit = Permit::find($id);
-
-        $user = User::find($permit->user_id);
-        $me = Division::find($request->user()->id);
-        if($user->leader_id !== $me->id) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'You are not the leader of this user'
-            ], 403);
-        }
-        if($permit->is_approved) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Permit has been approved'
-            ], 403);
-        }
-        if($permit->is_approved === false) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Permit has been denied'
-            ], 403);
-        }
-        $permit->update([
-            'is_approved' => true
-        ]);
-        return response()->json([
-            'status' => 'successful',
-            'message' => 'Permit successfuly approved',
-            'data' => $permit
-        ], 200);
-    }
-
     public function leave(Request $request)
     {
-        $attendance = Attendance::where('user_id', $request->user()->id)
+        $attendance = Attendance::with(['office.schedules'])->where('user_id', $request->user()->id)
             ->where('date', Carbon::now()->toDateString())
             ->where('status', 'absen')
             ->first();
@@ -263,8 +189,15 @@ class AbsenController extends Controller
             ], 403);
         }
 
+        if(!Carbon::now()->gt($attendance->office->schedules->firstWhere('status', 'active')->work_end_time)) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => "You can't leave before work end time"
+            ], 403);
+        }
+
         $attendance->update([
-            'status' => 'leave',
+            'status' => 'pulang',
             'work_end_time' => Carbon::now()->toTimeString()
         ]);
 
@@ -275,34 +208,74 @@ class AbsenController extends Controller
         ], 200);
     }
 
-    public function getPresence(Request $request)
+    public function getPresences(Request $request)
     {
         $absent = Attendance::where('user_id', $request->user()->id)->where('status', '!=', 'alfa')->get();
-        $permit = Permit::where('user_id', $request->user()->id)->where('is_approve', true)->get();
+        $permit = Permit::where('user_id', $request->user()->id)->where('is_approved', true)->get();
         $alfa = Attendance::where('user_id', $request->user()->id)->where('status', 'alfa')->get();
-        $telat = Attendance::with(['office'])->where('user_id', $request->user()->id)->where('status', '!=', 'alfa')->get();
-
-        foreach($telat as $key => $value) {
-            $time = Carbon::parse($value->office->work_start_time);
+        $telat = Attendance::with(['office.schedules'])->where('user_id', $request->user()->id)->where('status', '!=', 'alfa')->get();
+        $telat = $telat->map(function($value) {
+            $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->work_start_time);
             $time2 = Carbon::parse($value->work_start_time);
             if($time2->gt($time)) {
-                $telat[$key]['telat'] = $time2->diffInMinutes($time);
-            } else {
-                $telat[$key]['telat'] = 0;
+                return $value;
             }
-        }
-
-        dd($telat);
-
+        })->filter();
         return response()->json([
             'status' => 'successful',
             'message' => 'Success get presence',
             'data' => [
-                'absent' => $absent,
-                'permit' => $permit,
-                'alfa' => $alfa,
-                'telat' => $telat
+                'absen' => Count($absent),
+                'izin' => Count($permit),
+                'alfa' => Count($alfa),
+                'telat' => Count($telat)
             ]
         ], 200);
+    }
+
+    public function getPresence(Request $request, $presence)
+    {
+        if($presence === 'absen') {
+            $absent = Attendance::where('user_id', $request->user()->id)->where('status', '!=', 'alfa')->get();
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'Success get presence',
+                'data' => $absent
+            ], 200);
+        } elseif($presence === 'izin') {
+            $permit = Permit::where('user_id', $request->user()->id)->where('is_approved', true)->get();
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'Success get presence',
+                'data' => $permit
+            ], 200);
+        } elseif($presence === 'alfa') {
+            $alfa = Attendance::where('user_id', $request->user()->id)->where('status', 'alfa')->get();
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'Success get presence',
+                'data' => $alfa
+            ], 200);
+        } elseif($presence === 'telat') {
+            $telat = Attendance::with(['office.schedules'])->where('user_id', $request->user()->id)->where('status', '!=', 'alfa')->get();
+            $telat = $telat->map(function($value) {
+                $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->work_start_time);
+                $time2 = Carbon::parse($value->work_start_time);
+                if($time2->gt($time)) {
+                    $value->makeHidden(['office']);
+                    return $value;
+                }
+            })->filter();
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'Success get presence',
+                'data' => $telat
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Invalid presence'
+            ], 403);
+        }
     }
 }
