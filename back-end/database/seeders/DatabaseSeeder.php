@@ -43,7 +43,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'nabilkeren590@gmail.com',
             'username' => 'Nabil Kevin',
             'password' => bcrypt('NabilKevin'),
-            'face_img' => 'photos/nabil.jpg',
             'leader_id' => 1
         ]);
         Division::create([
@@ -51,7 +50,7 @@ class DatabaseSeeder extends Seeder
         ]);
         Schedule::create([
             'office_id' => 1,
-            'work_start_time' => '09:00:00',
+            'work_start_time' => '10:00:00',
             'work_end_time' => '18:00:00',
             'expired_date' => null,
             'status' => 'active'

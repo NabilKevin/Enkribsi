@@ -8,8 +8,6 @@ use App\Models\Office;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\Division;
-use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -95,17 +93,17 @@ class AbsenController extends Controller
             ], 403);
         }
 
-        $data = $request;
-        $data['image'] = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $data->image));
+        $data = $request->all();
+        $data['image'] = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $data['image']));
 
         // Simpan sementara image dari base64 ke storage
         $tempImage = 'photos/temp_image.png';
-        Storage::disk('public')->put("{$tempImage}", $data->image);;
+        Storage::disk('public')->put("{$tempImage}", $data['image']);;
 
         $reference_image = storage_path('app/public/' . $request->user()->face_img);
 
         $projectRoot = base_path();
-        $scriptPath = '../py/main.py';
+        $scriptPath = '../py/validasiwajah.py';
         $command = "cd {$projectRoot} && python {$scriptPath} " . escapeshellarg($reference_image) . " " . escapeshellarg(storage_path("app/public/{$tempImage}"));
 
         $output = json_decode(exec($command), true);
@@ -139,7 +137,8 @@ class AbsenController extends Controller
     public function storePermit(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'reason' => 'required|string'
+            'reason' => 'required|string',
+            'permit_type' => 'required|string'
         ]);
 
         if($validator->fails()) {
@@ -164,6 +163,7 @@ class AbsenController extends Controller
         $permit = Permit::create([
             'user_id' => $request->user()->id,
             'reason' => $data['reason'],
+            'permit_type' => $data['permit_type'],
             'leader_id' => $request->user()->leader_id,
             'date' => Carbon::now()->toDateString()
         ]);
@@ -233,8 +233,9 @@ class AbsenController extends Controller
         ], 200);
     }
 
-    public function getPresence(Request $request, $presence)
+    public function getPresence(Request $request)
     {
+        $presence = $request->query('presence');
         if($presence === 'absen') {
             $absent = Attendance::where('user_id', $request->user()->id)->where('status', '!=', 'alfa')->get();
             return response()->json([

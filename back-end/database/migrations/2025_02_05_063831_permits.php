@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->text('reason');
+            $table->enum('permit_type', ['izin', 'sakit', 'wfh']);
             $table->unsignedBigInteger('leader_id');
             $table->text('bod_reason')->nullable()->default(null);
             $table->boolean('is_approved')->nullable()->default(null);
