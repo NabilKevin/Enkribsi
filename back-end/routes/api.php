@@ -33,16 +33,23 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
     Route::middleware(isBOD::class)->group(function () {
-        Route::post('/accpermit/{id}', [BodController::class, 'approvePermit']);
-        Route::post('/denypermit/{id}', [BodController::class, 'denyPermit']);
+        Route::get('/permit', [BodController::class, 'getPermits']);
+        Route::post('/permit/approve/{id}', [BodController::class, 'approvePermit']);
+        Route::post('/permit/deny/{id}', [BodController::class, 'denyPermit']);
     });
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+
     Route::post('/checklocation', [AbsenController::class, 'checkLocation']);
     Route::post('/absent', [AbsenController::class, 'absent']);
     Route::post('/permit', [AbsenController::class, 'storePermit']);
+    Route::post('/permit/cancel/{id}', [AbsenController::class, 'cancelPermit']);
     Route::post('/leave', [AbsenController::class, 'leave']);
     Route::get('/presences', [AbsenController::class, 'getPresences']);
     Route::get('/presence', [AbsenController::class, 'getPresence']);
+    Route::get('/attendance', [AbsenController::class, 'getAttendance']);
+    Route::get('/permit', [AbsenController::class, 'getPermits']);
+
     Route::post('/addphoto', [UserController::class, 'addPhotoProfile']);
+    Route::get('/me', [UserController::class, 'me']);
 });

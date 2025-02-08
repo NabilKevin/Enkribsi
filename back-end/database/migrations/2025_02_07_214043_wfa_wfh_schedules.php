@@ -11,12 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('divisions', callback: function (Blueprint $table) {
+        Schema::create('wfa_wfh_schedules', function (Blueprint $table) {
             $table->id();
-            $table->enum('name', ['admin', 'user', 'bod', 'hr'])->default('user');
-            $table->unsignedBigInteger('user_id');
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->enum('type', ['wfh', 'wfa']);
+            $table->unsignedBigInteger('office_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('office_id')->references('id')->on('offices')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -26,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('divisions');
+        Schema::dropIfExists('wfa_wfh_schedules');
     }
 };

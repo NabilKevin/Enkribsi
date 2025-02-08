@@ -14,16 +14,18 @@ return new class extends Migration
         Schema::create('permits', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->text('reason');
-            $table->enum('permit_type', ['izin', 'sakit', 'wfh']);
             $table->unsignedBigInteger('leader_id');
-            $table->text('bod_reason')->nullable()->default(null);
-            $table->boolean('is_approved')->nullable()->default(null);
+            $table->unsignedBigInteger('office_id');
             $table->date('date');
+            $table->enum('permit_type', ['izin', 'sakit', 'wfa', 'wfh']);
+            $table->text('reason');
+            $table->text('bod_reason')->nullable()->default(null);
+            $table->enum('status', ['pending', 'approved', 'denied', 'canceled'])->default('pending');
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('leader_id')->references('id')->on('users');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('leader_id')->references('id')->on('divisions')->onDelete('cascade');
+            $table->foreign('office_id')->references('id')->on('offices')->onDelete('cascade');
         });
     }
 

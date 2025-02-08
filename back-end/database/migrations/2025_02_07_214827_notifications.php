@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('schedules', function (Blueprint $table) {
+        Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('office_id')->constrained('offices')->onDelete('cascade');
-            $table->time('check_in_time');
-            $table->time('check_out_time');
-            $table->date('expired_date')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->unsignedBigInteger('user_id');
+            $table->string('title');
+            $table->text('content');
+            $table->boolean('is_read')->default(false);
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('schedules');
+        Schema::dropIfExists('notifications');
     }
 };

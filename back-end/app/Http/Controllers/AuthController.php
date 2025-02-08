@@ -17,6 +17,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'username' => 'required',
             'password' => 'required|min:6',
+            'remember_me' => 'boolean'
         ]);
 
         if ($validator->fails()) {
@@ -27,11 +28,11 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $data = $request->all();
+        $data = $request->only(['username', 'password']);
 
         if(Auth::attempt($data)) {
             $user = User::firstWhere('username', $data['username']);
-            $token = $user->createToken('login')->plainTextToken;
+            $token = $request->remember_me ? $user->createToken('login')->plainTextToken : $user->createToken('login', ['*'], Carbon::now()->addDay())->plainTextToken;
             $user['token'] = $token;
 
             return response()->json([

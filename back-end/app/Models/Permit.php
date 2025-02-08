@@ -7,4 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Permit extends Model
 {
     protected $guarded = ['id'];
+
+    public function Office()
+    {
+        return $this->belongsTo(Office::class, 'office_id', 'id');
+    }
 }

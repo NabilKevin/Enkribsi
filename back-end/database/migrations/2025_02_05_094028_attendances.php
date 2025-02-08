@@ -15,14 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->date('date');
-            $table->time('work_start_time');
-            $table->time('work_end_time')->nullable();
-            $table->enum('status', ['absen', 'pulang', 'alfa'])->default('absen');
-            $table->double('user_latitude');
-            $table->double('user_longitude');
-            $table->unsignedBigInteger('office_id');
+            $table->time('check_in_time')->nullable();
+            $table->time('check_out_time')->nullable();
+            $table->enum('status', ['absen', 'pulang', 'alfa', 'izin'])->default('absen');
+            $table->enum('work_type', ['wfa', 'wfh', 'wfo'])->default('wfo');
+            $table->double('user_latitude')->nullable();
+            $table->double('user_longitude')->nullable();
+            $table->unsignedBigInteger('office_id')->nullable();
 
-            $table->foreign('office_id')->references('id')->on('offices');
+            $table->foreign('office_id')->references('id')->on('offices')->onDelete('cascade');
             $table->timestamps();
         });
     }

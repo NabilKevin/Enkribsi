@@ -17,27 +17,15 @@ class BodController extends Controller
     {
         $permit = Permit::find($id);
 
-        $user = User::find($permit->user_id);
-        $me = Division::find($request->user()->id);
-        if($user->leader_id !== $me->id) {
+        if(!$permit) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => 'You are not the leader of this user'
-            ], 403);
-        }
-        if($permit->is_approved) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Permit has been approved'
-            ], 403);
-        }
-        if($permit->is_approved === false) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Permit has been denied'
-            ], 403);
+                'message' => 'Permit not found'
+            ], 404);
         }
 
+        $user = User::find($permit->user_id);
+        $myDivision = Division::firstWhere('user_id', $request->user()->id);
         $validator = Validator::make($request->all(), [
             'bod_reason' => 'required|string'
         ]);
@@ -50,8 +38,33 @@ class BodController extends Controller
             ], 422);
         }
 
+        if($user->leader_id !== $myDivision->id) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'You are not the leader of this user'
+            ], 403);
+        }
+        if($permit->status === 'approved') {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Permit has been approved'
+            ], 403);
+        }
+        if($permit->status === 'denied') {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Permit has been denied'
+            ], 403);
+        }
+        if($permit->status === 'canceled') {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'User has canceled his permit'
+            ], 403);
+        }
+
         $permit->update([
-            'is_approved' => false,
+            'status' => 'denied',
             'bod_reason' => $request->bod_reason
         ]);
         return response()->json([
@@ -64,28 +77,42 @@ class BodController extends Controller
     {
         $permit = Permit::find($id);
 
+        if(!$permit) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Permit not found'
+            ], 404);
+        }
+
         $user = User::find($permit->user_id);
-        $me = Division::find($request->user()->id);
-        if($user->leader_id !== $me->id) {
+        $myDivision = Division::firstWhere('user_id', $request->user()->id);
+        if($user->leader_id !== $myDivision->id) {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => 'You are not the leader of this user'
             ], 403);
         }
-        if($permit->is_approved) {
+        if($permit->status === 'approved') {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => 'Permit has been approved'
             ], 403);
         }
-        if($permit->is_approved === false) {
+        if($permit->status === 'denied') {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => 'Permit has been denied'
             ], 403);
         }
+        if($permit->status === 'canceled') {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'User has canceled his permit'
+            ], 403);
+        }
+
         $permit->update([
-            'is_approved' => true
+            'status' => 'approved'
         ]);
 
         $absent = Attendance::where('user_id', $permit->user_id)
@@ -93,15 +120,34 @@ class BodController extends Controller
 
         if($absent) {
             $absent->update([
-                'status' => 'pulang',
-                'work_end_time' => Carbon::now()->toTimeString()
+                'status' => $permit->permit_type === 'sakit' ? 'izin' : $permit->permit_type,
+                'check_out_time' => $permit->permit_type === 'sakit' || $permit->permit_type === 'izin' ? Carbon::now()->toTimeString() : null
             ]);
+        } else {
+            if(Carbon::parse($permit->date)->isToday()) {
+                Attendance::create([
+                    'user_id' => $permit->user_id,
+                    'date' => Carbon::now()->toDateString(),
+                    'status' => $permit->permit_type === 'sakit' ? 'izin' : $permit->permit_type
+                ]);
+            }
         }
 
         return response()->json([
             'status' => 'successful',
             'message' => 'Permit successfuly approved',
             'data' => $permit
+        ], 200);
+    }
+
+    public function getPermits(Request $request)
+    {
+        $division = Division::firstWhere('user_id', $request->user()->id);
+        $permits = Permit::where('leader_id', $division->id)->where('status', 'pending')->get();
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Successfully get permits',
+            'data' => $permits
         ], 200);
     }
 }

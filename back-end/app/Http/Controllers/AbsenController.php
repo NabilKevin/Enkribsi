@@ -77,19 +77,18 @@ class AbsenController extends Controller
         if(!$request->user()->face_img) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => 'You have not uploaded your face image'
+                'message' => "You haven't uploaded your face image"
             ], 403);
         }
 
         $isAbsent = Attendance::where('user_id', $request->user()->id)
             ->where('date', Carbon::now()->toDateString())
-            ->where('status', 'absen')
             ->first();
 
         if($isAbsent) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => 'You have been absent today'
+                'message' => 'You have been absent/permit today'
             ], 403);
         }
 
@@ -116,7 +115,7 @@ class AbsenController extends Controller
             $absent = Attendance::create([
                 'user_id' => $request->user()->id,
                 'date' => Carbon::now()->toDateString(),
-                'work_start_time' => Carbon::now()->toTimeString(),
+                'check_in_time' => Carbon::now()->toTimeString(),
                 'user_latitude' => $request->lat,
                 'user_longitude' => $request->lon,
                 'office_id' => $request->office,
@@ -138,7 +137,9 @@ class AbsenController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'reason' => 'required|string',
-            'permit_type' => 'required|string'
+            'permit_type' => 'required|string',
+            'date' => 'date|required',
+            'office_id' => 'required|integer',
         ]);
 
         if($validator->fails()) {
@@ -151,12 +152,18 @@ class AbsenController extends Controller
 
         $data = $request->all();
 
-        $permit = Permit::where('user_id', $request->user()->id)->where('date', Carbon::now()->toDateString())->first();
+        $permit = Permit::where('user_id', $request->user()->id)->where('date', $data['date'])->first();
 
         if($permit) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => 'You have been requested permit today'
+                'message' => 'You have been request permit in that date'
+            ], 403);
+        }
+        if(Carbon::now()->toDateString() > Carbon::parse($data['date'])->toDateString()) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'You cannot request leave for past dates'
             ], 403);
         }
 
@@ -165,7 +172,8 @@ class AbsenController extends Controller
             'reason' => $data['reason'],
             'permit_type' => $data['permit_type'],
             'leader_id' => $request->user()->leader_id,
-            'date' => Carbon::now()->toDateString()
+            'date' => $data['date'],
+            'office_id' => $data['office_id']
         ]);
 
         return response()->json([
@@ -189,7 +197,7 @@ class AbsenController extends Controller
             ], 403);
         }
 
-        if(!Carbon::now()->gt($attendance->office->schedules->firstWhere('status', 'active')->work_end_time)) {
+        if(!Carbon::now()->gt($attendance->office->schedules->firstWhere('status', 'active')->check_out_time)) {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => "You can't leave before work end time"
@@ -198,7 +206,7 @@ class AbsenController extends Controller
 
         $attendance->update([
             'status' => 'pulang',
-            'work_end_time' => Carbon::now()->toTimeString()
+            'check_out_time' => Carbon::now()->toTimeString()
         ]);
 
         return response()->json([
@@ -211,13 +219,14 @@ class AbsenController extends Controller
     public function getPresences(Request $request)
     {
         $absent = Attendance::where('user_id', $request->user()->id)->where('status', '!=', 'alfa')->get();
-        $permit = Permit::where('user_id', $request->user()->id)->where('is_approved', true)->get();
+        $permit = Attendance::where('user_id', $request->user()->id)->where('status', 'izin')->get();
         $alfa = Attendance::where('user_id', $request->user()->id)->where('status', 'alfa')->get();
         $telat = Attendance::with(['office.schedules'])->where('user_id', $request->user()->id)->where('status', '!=', 'alfa')->get();
         $telat = $telat->map(function($value) {
-            $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->work_start_time);
-            $time2 = Carbon::parse($value->work_start_time);
+            $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->check_in_time);
+            $time2 = Carbon::parse($value->check_in_time);
             if($time2->gt($time)) {
+                $value->makeHidden(['office']);
                 return $value;
             }
         })->filter();
@@ -244,7 +253,7 @@ class AbsenController extends Controller
                 'data' => $absent
             ], 200);
         } elseif($presence === 'izin') {
-            $permit = Permit::where('user_id', $request->user()->id)->where('is_approved', true)->get();
+            $permit = Attendance::where('user_id', $request->user()->id)->where('status', 'izin')->get();
             return response()->json([
                 'status' => 'successful',
                 'message' => 'Success get presence',
@@ -260,8 +269,8 @@ class AbsenController extends Controller
         } elseif($presence === 'telat') {
             $telat = Attendance::with(['office.schedules'])->where('user_id', $request->user()->id)->where('status', '!=', 'alfa')->get();
             $telat = $telat->map(function($value) {
-                $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->work_start_time);
-                $time2 = Carbon::parse($value->work_start_time);
+                $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->check_in_time);
+                $time2 = Carbon::parse($value->check_in_time);
                 if($time2->gt($time)) {
                     $value->makeHidden(['office']);
                     return $value;
@@ -278,5 +287,66 @@ class AbsenController extends Controller
                 'message' => 'Invalid presence'
             ], 403);
         }
+    }
+
+    public function getAttendance(Request $request)
+    {
+        $absent = Attendance::where('user_id', $request->user_id)->firstWhere('date', Carbon::now()->toDateString());
+        if(!$absent) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => "You haven't been absent today"
+            ], 404);
+        }
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Successfully get your attendance',
+            'data' => $absent
+        ], 200);
+    }
+
+    public function cancelPermit(Request $request, $id)
+    {
+        $permit = Permit::with(['office.schedules'])->find($id);
+
+        if(!$permit) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Permit not found'
+            ], 404);
+        }
+
+        if($permit->user_id !== $request->user()->id) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'This is not your permit'
+            ], 403);
+        }
+
+        if(Carbon::now()->toDateString() > Carbon::parse($permit->date)->toDateString() || Carbon::now()->toDateString() === Carbon::parse($permit->date)->toDateString() && Carbon::now()->toTimeString() > Carbon::parse($permit->office->schedules->check_out_time)->toDateString()) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => "You can't cancel your permit"
+            ], 403);
+        }
+        $permit->update([
+            'status' => 'canceled'
+        ]);
+
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Permit successfully canceled'
+        ], 200);
+
+
+    }
+    public function getPermits(Request $request)
+    {
+        $permits = Permit::where('user_id', $request->user()->id)->get();
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Successfully get permits',
+            'data' => $permits
+        ], 200);
     }
 }

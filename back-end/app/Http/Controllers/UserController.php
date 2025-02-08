@@ -48,4 +48,13 @@ class UserController extends Controller
             'data' => $output
         ]);
     }
+
+    public function me(Request $request)
+    {
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Successfully get your data',
+            'data' => $request->user()
+        ], 200);
+    }
 }

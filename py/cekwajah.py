@@ -3,9 +3,8 @@ import dlib
 import numpy as np
 import sys
 import json
-import os
 
-sys.stdout = open('nul', 'w')
+cv2.setLogLevel(1)
 
 # Load pre-trained face detector and shape predictor from dlib
 detector = dlib.get_frontal_face_detector()
