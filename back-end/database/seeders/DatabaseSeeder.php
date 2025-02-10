@@ -34,7 +34,6 @@ class DatabaseSeeder extends Seeder
             'username' => 'Agung Pranomo',
             'password' => bcrypt('AgungPranomo'),
             'face_img' => 'photos/agung.jpg',
-            'leader_id' => null,
             'role' => 'bod'
         ]);
         Division::create([
@@ -46,6 +45,12 @@ class DatabaseSeeder extends Seeder
             'username' => 'Nabil Kevin',
             'password' => bcrypt('NabilKevin'),
             'leader_id' => 1
+        ]);
+        User::create([
+            'email' => 'nabilkeven590@gmail.com',
+            'username' => 'Nabil K',
+            'password' => bcrypt('NabilK'),
+            'role' => 'admin'
         ]);
         Division::create([
             'user_id' => 2,

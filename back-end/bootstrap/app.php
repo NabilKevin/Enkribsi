@@ -2,7 +2,7 @@
 
 use Illuminate\Foundation\Application;
 use Illuminate\Console\Scheduling\Schedule;
-use App\Console\Commands\DeleteExpiredTokens;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -16,7 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (AuthenticationException $e) {
+            return response()->json([
+                "status" => "invalid_token",
+                "message" => "Invalid or expired token"
+            ], 401);
+        });
     })->withSchedule(function(Schedule $schedule){
         $schedule->command('tokens:delete-expired')->daily();
     })->create();

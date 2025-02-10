@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('username', 50)->unique();
             $table->string('password');
-            $table->string('face_img')->nullable();
-            $table->unsignedBigInteger('leader_id')->nullable();
+            $table->string('face_img')->nullable()->default(null);
+            $table->unsignedBigInteger('leader_id')->nullable()->default(null);
             $table->enum('role', ['admin', 'user', 'bod', 'hr'])->default('user');
             $table->timestamps();
         });

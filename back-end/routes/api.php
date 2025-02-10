@@ -9,6 +9,7 @@ use App\Http\Controllers\BodController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AbsenController;
+use App\Http\Controllers\AdminController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -27,7 +28,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware(isAdmin::class)->group(function () {
-
+        Route::get('/bods', [AdminController::class, 'getBods']);
+        Route::resource('employees', AdminController::class);
     });
     Route::middleware(isHR::class)->group(function () {
 
