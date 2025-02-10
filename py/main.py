@@ -6,6 +6,7 @@ import dlib
 import numpy as np
 import base64
 import face_recognition
+from io import BytesIO
 
 app = Flask(__name__)
 
@@ -19,27 +20,36 @@ predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")  # Pas
 def generateExcell():
     # Ambil data JSON dari request
     data = request.json
-    if not isinstance(data, dict):
-      return jsonify({'error': 'Data harus berupa JSON object'}), 400
 
+    # Validasi apakah data adalah JSON object
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Data harus berupa JSON object'}), 400
+
+    # Konversi data JSON menjadi DataFrame
     df_absensi = pd.DataFrame(data['absensi'])
     df_rekap = pd.DataFrame(data['rekap'])
     df_perizinan = pd.DataFrame(data['perizinan'])
     df_pelanggaran = pd.DataFrame(data['pelanggaran'])
 
-    file_path = 'Laporan_Absensi.xlsx'
+    # Gunakan BytesIO untuk menyimpan file Excel di memori
+    with BytesIO() as buffer:
+        # Tulis file Excel ke buffer
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            df_absensi.to_excel(writer, sheet_name="Absensi", index=False)
+            df_rekap.to_excel(writer, sheet_name="Rekap", index=False)
+            df_perizinan.to_excel(writer, sheet_name="Perizinan", index=False)
+            df_pelanggaran.to_excel(writer, sheet_name="Pelanggaran", index=False)
 
-    with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
-      df_absensi.to_excel(writer, sheet_name="Absensi", index=False)
-      df_rekap.to_excel(writer, sheet_name="Rekap", index=False)
-      df_perizinan.to_excel(writer, sheet_name="Perizinan", index=False)
-      df_pelanggaran.to_excel(writer, sheet_name="Pelanggaran", index=False)
+        # Dapatkan konten buffer dan encode ke Base64
+        buffer.seek(0)  # Pindahkan pointer buffer ke awal
+        file_content = buffer.read()
+        base64_encoded = base64.b64encode(file_content).decode('utf-8')
 
-    with open(file_path, 'rb') as file:
-      file_content = file.read()
-      base64_encoded = base64.b64encode(file_content).decode('utf-8')
-
-    return jsonify({'message': 'File excell telah berhasil di buat', 'data': base64_encoded})
+    # Kembalikan hasil sebagai JSON
+    return jsonify({
+        'message': 'File Excel telah berhasil dibuat',
+        'data': base64_encoded
+    })
 
 @app.route('/cekwajah', methods=['POST'])
 def is_face_facing_camera():
