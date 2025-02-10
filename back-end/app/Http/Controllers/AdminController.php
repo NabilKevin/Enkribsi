@@ -29,10 +29,19 @@ class AdminController extends Controller
 
     public function show(Request $request, $id)
     {
+        $user = User::find($id);
+
+        if(!$user) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'User not found'
+            ], 404);
+        }
+
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get employee',
-            'data' => User::find($id)
+            'data' => $user
         ], 200);
     }
 
@@ -50,7 +59,7 @@ class AdminController extends Controller
             'username' => 'required|min:5|regex:/[A-z0-9_.]+/|unique:users,username',
             'password' => 'required|min:8',
             'role' => 'required|in:bod,user,hr',
-            'leader_id' => 'integer',
+            'leader_id' => 'integer|exists:divisions,id',
             'email' => 'email:dns|required|unique:users,email'
         ]);
 
@@ -66,13 +75,6 @@ class AdminController extends Controller
 
         if(array_key_exists('leader_id', $data)) {
             $leader = Division::find($data['leader_id']);
-
-            if(!$leader) {
-                return response()->json([
-                    'status' => 'unsuccessful',
-                    'message' => 'Leader not found'
-                ], 404);
-            }
 
             if($leader->name !== 'bod') {
                 return response()->json([
@@ -130,7 +132,7 @@ class AdminController extends Controller
         $rule = [
             'password' => 'min:8',
             'role' => 'in:bod,user,hr',
-            'leader_id' => 'integer'
+            'leader_id' => 'integer|exists:divisions,id'
         ];
 
         $user = User::find($id);
@@ -163,13 +165,6 @@ class AdminController extends Controller
 
         if(array_key_exists('leader_id', $data) && $user->leader_id !== $data['leader_id']) {
             $leader = Division::find($data['leader_id']);
-
-            if(!$leader) {
-                return response()->json([
-                    'status' => 'unsuccessful',
-                    'message' => 'Leader not found'
-                ], 404);
-            }
 
             if($leader->name !== 'bod') {
                 return response()->json([

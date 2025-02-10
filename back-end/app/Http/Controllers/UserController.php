@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -23,20 +24,28 @@ class UserController extends Controller
             ], 422);
         }
 
-        $photo = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $request->photo));
+        $photo = preg_replace('/^data:image\/\w+;base64,/', '', $request->photo);
+
+        $url = env("PYTHON_URL") . '/cekwajah';
+        
+        $data = [
+            'image' => $photo
+        ];
+        
+        $response = Http::post($url, $data);
+
+        if($response->failed()) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => $response->json()
+            ], $response->status());
+        }
+
+        $photo = base64_decode($photo);
 
         $photoName = 'photos/'. time() . '.jpg';
 
-        $reference = Storage::disk('public')->put($photoName, $photo);
-
-        $projectRoot = base_path() . '/../py';
-        $scriptPath = './cekwajah.py';
-        $command = "cd {$projectRoot} && python {$scriptPath} " . escapeshellarg(storage_path("app/public/{$photoName}"));
-        $output = json_decode(exec($command), true);
-
-        if($output['status'] === 'unsuccessful') {
-            return response()->json($output, 422);
-        }
+        Storage::disk('public')->put($photoName, $photo);
 
         $request->user()->update([
             'face_img' => $photoName
@@ -45,7 +54,7 @@ class UserController extends Controller
         return response()->json([
             'status' => 'successful',
             'message' => 'Photo successfuly uploaded',
-            'data' => $output
+            'data' => $response->json()
         ]);
     }
 

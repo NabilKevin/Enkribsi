@@ -18,7 +18,7 @@ return new class extends Migration
             $table->time('check_in_time')->nullable();
             $table->time('check_out_time')->nullable();
             $table->enum('status', ['absen', 'pulang', 'alfa', 'izin'])->default('absen');
-            $table->enum('work_type', ['wfa', 'wfh', 'wfo'])->default('wfo');
+            $table->enum('work_type', ['wfa', 'wfh', 'wfo'])->nullable()->default(null);
             $table->double('user_latitude')->nullable();
             $table->double('user_longitude')->nullable();
             $table->unsignedBigInteger('office_id')->nullable();

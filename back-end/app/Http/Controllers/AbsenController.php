@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Office;
 use App\Models\Permit;
 use App\Models\Division;
-use App\Models\User;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -17,6 +18,16 @@ class AbsenController extends Controller
 {
     public function checkLocation(Request $request)
     {
+        $permit = Permit::where('user_id', $request->user()->id)
+        ->where('date', Carbon::now()->toDateString())->first();
+
+        if(in_array($permit->permit_type, ['wfa', 'wfh'])) {
+            return response()->json([
+                'status' => 'successful',
+                'message' => "You don't need to check your location"
+            ], 200);
+        }
+
         $validator = Validator::make($request->all(), [
             'lat' => 'required|numeric',
             'lon' => 'required|numeric',
@@ -87,33 +98,35 @@ class AbsenController extends Controller
             ->where('date', Carbon::now()->toDateString())
             ->first();
 
+        $permit = Permit::where('user_id', $request->user()->id)
+        ->where('date', Carbon::now()->toDateString())->first();
+
         if($isAbsent) {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => 'You have been absent/permit today'
             ], 403);
         }
-
-        $data = $request->all();
-        $data['image'] = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $data['image']));
-
-        // Simpan sementara image dari base64 ke storage
-        $tempImage = 'photos/temp_image.png';
-        Storage::disk('public')->put("{$tempImage}", $data['image']);;
-
-        $reference_image = storage_path('app/public/' . $request->user()->face_img);
-
-        $projectRoot = base_path();
-        $scriptPath = '../py/validasiwajah.py';
-        $command = "cd {$projectRoot} && python {$scriptPath} " . escapeshellarg($reference_image) . " " . escapeshellarg(storage_path("app/public/{$tempImage}"));
-
-        $output = json_decode(exec($command), true);
-
-        if (Storage::disk('public')->exists($tempImage)) {
-            Storage::disk('public')->delete($tempImage);
+        if($permit && in_array($permit->permit_type, ['izin', 'sakit'])) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'You have been permit today'
+            ], 403);
         }
+        
+        $data = $request->all();
+        $reference_image = Storage::disk('public')->get($request->user()->face_img);
 
-        if($output['status'] === 'successful') {
+        $url = env("PYTHON_URL") . '/validasiwajah';
+        
+        $data = [
+            'image1' => preg_replace('/^data:image\/\w+;base64,/', '', $data['image']),
+            'image2' => base64_encode($reference_image)
+        ];
+        
+        $response = Http::post($url, $data);
+
+        if($response->successful()) {
             $absent = Attendance::create([
                 'user_id' => $request->user()->id,
                 'date' => Carbon::now()->toDateString(),
@@ -121,6 +134,7 @@ class AbsenController extends Controller
                 'user_latitude' => $request->lat,
                 'user_longitude' => $request->lon,
                 'office_id' => $request->office,
+                'work_type' => $permit ? $permit->permit_type : 'wfo'
             ]);
             return response()->json([
                 'status' => 'successful',
@@ -154,7 +168,7 @@ class AbsenController extends Controller
 
         $data = $request->all();
 
-        $permit = Permit::where('user_id', $request->user()->id)->where('date', $data['date'])->where('status', "!-", 'canceled')->first();
+        $permit = Permit::where('user_id', $request->user()->id)->where('date', $data['date'])->where('status', "!=", 'canceled')->first();
 
         if($permit) {
             return response()->json([

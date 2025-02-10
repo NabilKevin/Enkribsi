@@ -8,8 +8,12 @@ class Permit extends Model
 {
     protected $guarded = ['id'];
 
-    public function Office()
+    public function office()
     {
         return $this->belongsTo(Office::class, 'office_id', 'id');
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 }

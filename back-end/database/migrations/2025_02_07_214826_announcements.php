@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('content');
             // target_audience itu adalah leader_id nya, jadi target audiencenya si bawahannya leader ini
             $table->unsignedBigInteger('target_audience')->nullable();
+            $table->enum('status', ['pending', 'approved', 'denied'])->default('pending');
 
             $table->foreign('target_audience')->references('id')->on('divisions')->onDelete('cascade');
             $table->timestamps();

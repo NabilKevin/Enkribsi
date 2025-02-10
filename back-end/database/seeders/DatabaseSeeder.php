@@ -29,21 +29,21 @@ class DatabaseSeeder extends Seeder
             'longitude' => 106.78862020452657,
             'radius' => 100
         ]);
-        // User::create([
-        //     'email' => 'agungpranomo@gmail.com',
-        //     'username' => 'Agung Pranomo',
-        //     'password' => bcrypt('AgungPranomo'),
-        //     'face_img' => 'photos/agung.jpg',
-        //     'role' => 'bod'
-        // ]);
         User::create([
-            'email' => 'nabilkeren590@gmail.com',
+            'email' => 'agungpranomo@gmail.com',
             'username' => 'Agung Pranomo',
             'password' => bcrypt('AgungPranomo'),
             'face_img' => 'photos/agung.jpg',
             'role' => 'bod'
         ]);
-        Division::create([
+        User::create([
+            'email' => 'hanny@gmail.com',
+            'username' => 'Hanny',
+            'password' => bcrypt('HannyEnkripa'),
+            'face_img' => 'photos/hanny.jpg',
+            'role' => 'hr'
+        ]);
+        Division::create(attributes: [
             'name' => 'bod',
             'user_id' => 1
         ]);
