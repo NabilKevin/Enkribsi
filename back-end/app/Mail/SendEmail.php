@@ -32,8 +32,8 @@ class SendEmail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Reset Password') // Subjek email
-                    ->view('emails.reset_password') // View untuk konten email
+        return $this->subject($this->data['subject']) // Subjek email
+                    ->view($this->data['view']) // View untuk konten email
                     ->with(['data' => $this->data]); // Kirim data ke view
     }
 }

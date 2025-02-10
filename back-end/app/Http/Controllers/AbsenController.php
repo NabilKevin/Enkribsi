@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Permit;
 use Carbon\Carbon;
 use App\Models\Office;
+use App\Models\Permit;
+use App\Models\Division;
+use App\Models\User;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -152,7 +154,7 @@ class AbsenController extends Controller
 
         $data = $request->all();
 
-        $permit = Permit::where('user_id', $request->user()->id)->where('date', $data['date'])->first();
+        $permit = Permit::where('user_id', $request->user()->id)->where('date', $data['date'])->where('status', "!-", 'canceled')->first();
 
         if($permit) {
             return response()->json([
@@ -163,8 +165,37 @@ class AbsenController extends Controller
         if(Carbon::now()->toDateString() > Carbon::parse($data['date'])->toDateString()) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => 'You cannot request leave for past dates'
+                'message' => "You can't request leave for past dates"
             ], 403);
+        }
+
+        if(Carbon::now()->toDateString() === Carbon::parse($data['date'])->toDateString()) {
+            if(in_array($data['permit_type'], ['wfh', 'wfa'])) {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => "WFH/WFA requests must be submitted at least one day in advance"
+                ], 403);
+            }
+
+            $bodDivision = Division::find($request->user()->leader_id);
+
+            $bod = User::find($bodDivision->user_id);
+
+            $username = $request->user()->username;
+
+            $dataMail = [
+                'subject' => "[URGENT] Permintaan Izin dari $username",
+                'name' => $bod->username,
+                'view' => 'permit.index',
+                'employee' => [
+                    'username' => $request->user()->username,
+                    'date' => $data['date'],
+                    'reason' => $data['reason'],
+                    'status' => 'pending'
+                ]
+            ];
+
+            sendEmail($bod->email, $dataMail);
         }
 
         $permit = Permit::create([
@@ -193,7 +224,7 @@ class AbsenController extends Controller
         if(!$attendance) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => 'You have not been absent today'
+                'message' => "You haven't been absent today"
             ], 403);
         }
 
@@ -323,7 +354,7 @@ class AbsenController extends Controller
             ], 403);
         }
 
-        if(Carbon::now()->toDateString() > Carbon::parse($permit->date)->toDateString() || Carbon::now()->toDateString() === Carbon::parse($permit->date)->toDateString() && Carbon::now()->toTimeString() > Carbon::parse($permit->office->schedules->check_out_time)->toDateString()) {
+        if(Carbon::now()->toDateString() > Carbon::parse($permit->date)->toDateString() || Carbon::now()->toDateString() === Carbon::parse($permit->date)->toDateString() && Carbon::now()->toTimeString() > Carbon::parse($permit->office->schedules->firstWhere('status', 'active')->check_out_time)->toTimeString()) {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => "You can't cancel your permit"

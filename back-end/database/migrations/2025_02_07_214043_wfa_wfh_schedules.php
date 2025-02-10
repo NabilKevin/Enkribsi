@@ -18,6 +18,7 @@ return new class extends Migration
             $table->enum('type', ['wfh', 'wfa']);
             $table->unsignedBigInteger('office_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
+            $table->enum('status', ['pending', 'active', 'inactive'])->default('pending');
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('office_id')->references('id')->on('offices')->onDelete('cascade');

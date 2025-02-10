@@ -29,8 +29,15 @@ class DatabaseSeeder extends Seeder
             'longitude' => 106.78862020452657,
             'radius' => 100
         ]);
+        // User::create([
+        //     'email' => 'agungpranomo@gmail.com',
+        //     'username' => 'Agung Pranomo',
+        //     'password' => bcrypt('AgungPranomo'),
+        //     'face_img' => 'photos/agung.jpg',
+        //     'role' => 'bod'
+        // ]);
         User::create([
-            'email' => 'agungpranomo@gmail.com',
+            'email' => 'nabilkeren590@gmail.com',
             'username' => 'Agung Pranomo',
             'password' => bcrypt('AgungPranomo'),
             'face_img' => 'photos/agung.jpg',
@@ -41,13 +48,13 @@ class DatabaseSeeder extends Seeder
             'user_id' => 1
         ]);
         User::create([
-            'email' => 'nabilkeren590@gmail.com',
+            'email' => 'nabilkeren@gmail.com',
             'username' => 'Nabil Kevin',
             'password' => bcrypt('NabilKevin'),
             'leader_id' => 1
         ]);
         User::create([
-            'email' => 'nabilkeven590@gmail.com',
+            'email' => 'nabilkevin590@gmail.com',
             'username' => 'Nabil K',
             'password' => bcrypt('NabilK'),
             'role' => 'admin'

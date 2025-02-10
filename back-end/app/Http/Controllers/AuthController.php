@@ -78,7 +78,8 @@ class AuthController extends Controller
             $data = [
                 'subject' => 'Permintaan Reset Password',
                 'name' => $user->username,
-                'token' => $token
+                'token' => $token,
+                'view' => 'emails.reset_password'
             ];
 
             PasswordReset::where('email', $request->email)->delete();

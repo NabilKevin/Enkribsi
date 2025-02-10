@@ -17,7 +17,7 @@ return new class extends Migration
             $table->time('check_in_time');
             $table->time('check_out_time');
             $table->date('expired_date')->nullable();
-            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->enum('status', ['pending', 'active', 'inactive'])->default('pending');
             $table->timestamps();
         });
     }

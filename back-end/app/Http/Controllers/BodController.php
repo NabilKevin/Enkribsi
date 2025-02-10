@@ -11,6 +11,11 @@ use App\Models\Attendance;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 
+// buat approval announcement
+// buat approval jadwal
+// buat approval office
+// buat approval jadwal wfa/wfh
+
 class BodController extends Controller
 {
     public function denyPermit(Request $request, $id)

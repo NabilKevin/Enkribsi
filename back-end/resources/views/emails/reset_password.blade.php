@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>{{ $data['subject'] }}</title>
-</head>
 <body>
     <h1>Halo, {{ $data['name'] }}!</h1>
     <p>Anda menerima email ini karena kami menerima permintaan reset password untuk akun Anda.</p>
