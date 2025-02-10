@@ -14,6 +14,7 @@ use App\Http\Controllers\AbsenController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\HrController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficeController;
 
 // Route::get('/user', function (Request $request) {
@@ -73,4 +74,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/addphoto', [UserController::class, 'addPhotoProfile']);
     Route::get('/me', [UserController::class, 'me']);
+
+    Route::get('/notifications/count', [NotificationController::class, 'getNotificationsCount']);
+    Route::get('/notifications', [NotificationController::class, 'getNotifications']);
+    Route::get('/notifications/{id}', [NotificationController::class, 'getNotification']);
+    Route::delete('/notifications', [NotificationController::class, 'deleteNotifications']);
 });

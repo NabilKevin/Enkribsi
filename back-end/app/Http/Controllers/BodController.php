@@ -8,6 +8,7 @@ use App\Models\Division;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
+use App\Models\Notification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 
@@ -137,6 +138,12 @@ class BodController extends Controller
                 ]);
             }
         }
+
+        Notification::create([
+            'user_id' => $permit->user_id,
+            'title' => 'Perizinan Anda Telah Disetujui!',
+            'content' => 'Kami dengan senang hati memberitahukan bahwa permohonan izin Anda telah disetujui. Terima kasih atas kerja sama Anda.'
+        ]);
 
         return response()->json([
             'status' => 'successful',
