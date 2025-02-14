@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Office;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Announcement;
 use Illuminate\Support\Facades\Validator;
 
 class OfficeController extends Controller
@@ -94,12 +95,22 @@ class OfficeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Office $office)
+    public function destroy(Request $request, $id)
     {
-        $office->delete();
+        $announcement = Announcement::find($id);
+        
+        if(! $announcement) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement not found'
+            ], 404);
+        }
+
+        $announcement->delete();
+        
         return response()->json([
             'status' => 'successful',
-            'message' => 'Office successfully deleted'
+            'message' => 'Announcement successfully deleted'
         ], 200);
     }
 }

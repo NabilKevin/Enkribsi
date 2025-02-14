@@ -2,21 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Office;
 use App\Models\Permit;
 use App\Models\Division;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Models\Schedule;
 use App\Models\Attendance;
+use App\Models\Announcement;
 use App\Models\Notification;
-use Carbon\Carbon;
+use Illuminate\Http\Request;
+use App\Models\WfaWfhSchedule;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
-
-// buat approval announcement
-// buat approval jadwal
-// buat approval office
-// buat approval jadwal wfa/wfh
-
 class BodController extends Controller
 {
     public function denyPermit(Request $request, $id)
@@ -162,4 +160,368 @@ class BodController extends Controller
             'data' => $permits
         ], 200);
     }
+
+    public function getPendingAnnouncements()
+    {
+        $announcements = Announcement::where('status', 'pending')->get();
+        return response()->json([
+            'status'=> 'successful',
+            'message'=> 'Successfully get pending announcements',
+            'data'=> $announcements,
+        ], 200);
+    }
+
+    public function approveAnnouncement(Request $request, $id)
+    {
+        $announcement = Announcement::find($id);
+
+        if(!$announcement) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement not found'
+            ], 404);
+        }
+
+        if($announcement->status === 'approved') {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement has already been approved'
+            ], 403);
+        }
+        if($announcement->status === 'denied') {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement has already been denied'
+            ], 403);
+        }
+
+        $announcement->update([
+            'status' => 'approved'
+        ]);
+
+        Notification::create([
+            'user_id' => $announcement->user_id,
+            'title' => 'Pengumuman Anda Telah Disetujui!',
+            'content' => 'Pengumuman Anda telah disetujui oleh BOD'
+        ]);
+
+        if(isset($announcement->target_audience)) {
+            $users = User::where('leader_id', $announcement->target_audience)->get();
+            foreach($users as $user) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'title'=> $announcement->title,
+                    'content'=> $announcement->content
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Announcement successfully approved',
+            'data' => $announcement
+        ], 200);
+    }
+
+    public function denyAnnouncement(Request $request, $id)
+    {
+        $announcement = Announcement::find($id);
+
+        if(!$announcement) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement not found'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'bod_reason' => 'required|string'
+        ]);
+
+        if($validator->fails()) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Invalid fields',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        if($announcement->status === 'approved') {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement has already been approved'
+            ], 403);
+        }
+        if($announcement->status === 'denied') {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement has already been denied'
+            ], 403);
+        }
+
+        $announcement->update([
+            'status' => 'denied',
+            'bod_reason' => $request->bod_reason
+        ]);
+
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Announcement successfully denied',
+            'data' => $announcement
+        ], 200);
+    }
+
+    public function destroyAnnouncement(Request $request, $id)
+    {
+        $announcement = Announcement::find($id);
+
+        if(! $announcement) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement not found'
+            ], 404);
+        }
+
+        $announcement->delete();
+
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Announcement successfully deleted'
+        ], 200);
+    }
+
+    // jadwal
+
+    public function getPendingSchedules()
+    {
+        $schedule = Schedule::where('status', 'pending')->get();
+        return response()->json([
+            'status'=> 'successful',
+            'message'=> 'Successfully get pending schedule',
+            'data'=> $schedule,
+        ], 200);
+    }
+    public function approveSchedule(Request $request, $id)
+{
+    $schedule = Schedule::find($id); // Corrected method
+
+    if (!$schedule) {
+        return response()->json(
+            [
+                'status' => 'unsuccessful',
+                'message'=> 'Schedule not found'
+            ], 404);
+    }
+
+    $schedule->update(['status' => 'approved']);
+
+    return response()->json(
+        [
+            'status' => 'successful',
+            'message'=> 'Schedule successfully approved',
+            'data' => $schedule
+        ], 200);
 }
+    public function destroySchedule(Request $request, $id)
+    {
+        $schedule = Schedule::find($id);
+
+        if(! $schedule) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Schedule not found'
+            ], 404);
+        }
+
+        $schedule->delete();
+
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Schedule successfully deleted'
+        ], 200);
+    }
+    public function approveOffice(Request $request, $id)
+        {
+            $Office = Office::find($id);
+
+            if(!$Office) {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Office not found'
+                ], 404);
+            }
+
+            if($Office->status === 'approved') {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Office has already been approved'
+                ], 403);
+            }
+            if($Office->status === 'denied') {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Office has already been denied'
+                ], 403);
+            }
+
+            $Office->update([
+                'status' => 'approved'
+            ]);
+
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'Office successfully approved',
+                'data' => $Office
+            ], 200);
+        }
+
+        public function denyOffice(Request $request, $id)
+        {
+            $Office = Office::find($id);
+
+            if(!$Office) {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Office not found'
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'bod_reason' => 'required|string'
+            ]);
+
+            if($validator->fails()) {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Invalid fields',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            if($Office->status === 'approved') {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Office has already been approved'
+                ], 403);
+            }
+            if($Office->status === 'denied') {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Office has already been denied'
+                ], 403);
+            }
+
+            $Office->update([
+                'status' => 'denied',
+                'bod_reason' => $request->bod_reason
+            ]);
+
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'Office successfully denied',
+                'data' => $Office
+            ], 200);
+        }
+        public function approveWFH(Request $request, $id)
+        {
+            $WfhWfhSchedul = wfaWfhSchedule::find($id);
+
+            if (!$WfhWfhSchedul) {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Schedule not found'
+                ], 404);
+            }
+
+            if ($WfhWfhSchedul->status === 'approved') {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Schedule has already been approved'
+                ], 403);
+            }
+            if ($WfhWfhSchedul->status === 'denied') {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Schedule has already been denied'
+                ], 403);
+            }
+
+            $WfhWfhSchedul->update([
+                'status' => 'approved'
+            ]);
+
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'Schedule successfully approved',
+                'data' => $WfhWfhSchedul
+            ], 200);
+        }
+
+        public function denyWFH(Request $request, $id)
+        {
+            $WfaWfhSchedul = WfaWfhSchedule::find($id);
+
+            if (!$WfaWfhSchedul) {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'WFA/WFH not found'
+                ], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'bod_reason' => 'required|string'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'Invalid fields',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            if ($WfaWfhSchedul->status === 'approved') {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'WFA/WFH has already been approved'
+                ], 403);
+            }
+            if ($WfaWfhSchedul->status === 'denied') {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'WFA/WFH has already been denied'
+                ], 403);
+            }
+
+            $WfaWfhSchedul->update([
+                'status' => 'denied',
+                'bod_reason' => $request->bod_reason
+            ]);
+
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'WFA/WFH successfully denied',
+                'data' => $WfaWfhSchedul
+            ], 200);
+        }
+        public function getEmployeeStatistics(Request $request, $userId)
+        {
+            $bodDivision = Division::firstWhere('user_id', $request->user()->id);
+            $user = User::where('leader_id' , $bodDivision)->get();
+
+            if (Count($user) <= 0) {
+                return response()->json([
+                    'status' => 'unsuccessful',
+                    'message' => 'You have no employees'
+                ], 404);
+            }
+
+            $attendanceStats = Attendance::whereIn('user_id', $user->id)->get();
+
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'Successfully retrieved employee statistics',
+                'data' => $attendanceStats
+            ], 200);
+        }
+    }

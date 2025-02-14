@@ -57,6 +57,18 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/permit', [BodController::class, 'getPermits']);
             Route::post('/permit/approve/{id}', [BodController::class, 'approvePermit']);
             Route::post('/permit/deny/{id}', [BodController::class, 'denyPermit']);
+            Route::post('/schedule/approve/{id}', [BodController::class, 'approveSchedule']);
+            route::post('/schedule/deny/{id}', [BodController::class, 'denySchedule']);
+            Route::post('/wfawfhschedule/approve/{id}', [BodController::class, 'approveWfaWfhSchedule']);
+            Route::post('wfaWfhSchedule/deny/{id}', [BodController::class, 'denyWfaWfhSchedule']);
+            Route::get('/statistics', [BodController::class, 'getStatistics']);
+            Route::get('/employees', [BodController::class, 'getEmployees']);
+            Route::get('/employees/{id}', [BodController::class, 'getEmployee']);
+            Route::get('/attendances', [BodController::class, 'getAttendances']);
+            Route::get('/offices', [BodController::class, 'getOffices']);
+            Route::get('/office/{id}', [BodController::class, 'getOffice']);
+            Route::post('/office/approve/{id}', [BodController::class, 'approveOffice']);
+            Route::post('/office', [BodController::class, 'storeOffice']);
         });
     });
 
