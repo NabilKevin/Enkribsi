@@ -27,17 +27,17 @@ class UserController extends Controller
         $photo = preg_replace('/^data:image\/\w+;base64,/', '', $request->photo);
 
         $url = env("PYTHON_URL") . '/cekwajah';
-        
+
         $data = [
             'image' => $photo
         ];
-        
+
         $response = Http::post($url, $data);
 
         if($response->failed()) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => $response->json()
+                'message' => $response->json()->message
             ], $response->status());
         }
 
@@ -45,7 +45,7 @@ class UserController extends Controller
 
         $photoName = 'photos/'. time() . '.jpg';
 
-        Storage::disk('public')->put($photoName, $photo);
+        Storage::put($photoName, $photo);
 
         $request->user()->update([
             'face_img' => $photoName
@@ -63,7 +63,7 @@ class UserController extends Controller
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get your data',
-            'data' => $request->user()
+            'user' => $request->user()
         ], 200);
     }
 }

@@ -7,14 +7,18 @@ import numpy as np
 import base64
 import face_recognition
 from io import BytesIO
+import sys
+import os
+
+script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
 
 app = Flask(__name__)
 
 cv2.setLogLevel(1)
-
 # Load pre-trained face detector and shape predictor from dlib
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")  # Pastikan file ini ada di direktori
+predictor = dlib.shape_predictor(f"{script_dir}/shape_predictor_68_face_landmarks.dat")  # Pastikan file ini ada di direktori
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + f'{script_dir}/haarcascade_frontalface_default.xml')
 
 @app.route('/generateExcell', methods=['POST'])
 def generateExcell():
@@ -49,7 +53,7 @@ def generateExcell():
     return jsonify({
         'message': 'File Excel telah berhasil dibuat',
         'data': base64_encoded
-    })
+    }), 200
 
 @app.route('/cekwajah', methods=['POST'])
 def is_face_facing_camera():
@@ -57,8 +61,8 @@ def is_face_facing_camera():
 
     if not isinstance(data, dict):
       return jsonify({'error': 'Data harus berupa JSON object'}), 400
-    if 'image1' not in data:
-      return jsonify({'error': 'Field "image1" harus ada'}), 400
+    if 'image' not in data:
+      return jsonify({'error': 'Field "image" harus ada'}), 404
     
     decoded_data = base64.b64decode(data['image'])
 
@@ -68,7 +72,7 @@ def is_face_facing_camera():
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
     if image is None:
-      return jsonify({"message": "Gambar tidak ditemukan.", 'status': "unsuccessful"})
+      return jsonify({"message": "Gambar tidak ditemukan.", 'status': "unsuccessful"}), 404
 
     # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -76,7 +80,7 @@ def is_face_facing_camera():
     # Detect faces
     faces = detector(gray)
     if len(faces) == 0:
-        return jsonify({"message": "Tidak ada wajah yang terdeteksi.", 'status': "unsuccessful"})
+        return jsonify({"message": "Tidak ada wajah yang terdeteksi.", 'status': "unsuccessful"}), 404
 
     for face in faces:
         # Get facial landmarks
@@ -101,16 +105,16 @@ def is_face_facing_camera():
         # 1. The angle between the eyes should be close to 0 (frontal face).
         # 2. The nose should be roughly centered between the eyes.
         if abs(angle_eyes) < 10 and abs(nose_to_left_eye - nose_to_right_eye) < 20:
-            return jsonify({"message": "Wajah menghadap ke kamera.", 'status': "successful"})
+            return jsonify({"message": "Wajah menghadap ke kamera.", 'status': "successful"}), 200
         else:
-            return jsonify({"message": "Wajah tidak menghadap ke kamera.", 'status': "unsuccessful"})
+            return jsonify({"message": "Wajah tidak menghadap ke kamera.", 'status': "unsuccessful"}), 422
 @app.route('/validasiwajah', methods=['POST'])
 def recognize_and_validate():
   data = request.json
   if not isinstance(data, dict):
     return jsonify({'error': 'Data harus berupa JSON object'}), 400
   if 'image1' not in data or 'image2' not in data:
-    return jsonify({'error': 'Field "image1" atau "image2" harus ada'}), 400
+    return jsonify({'error': 'Field "image1" atau "image2" harus ada'}), 404
   
   decoded_data1 = base64.b64decode(data['image1'])
   decoded_data2 = base64.b64decode(data['image2'])
@@ -123,9 +127,9 @@ def recognize_and_validate():
   image2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
 
   if image1 is None:
-    return jsonify({"message": "Gambar1 tidak ditemukan.", 'status': "unsuccessful"})
+    return jsonify({"message": "Gambar1 tidak ditemukan.", 'status': "unsuccessful"}), 404
   if image2 is None:
-    return jsonify({"message": "Gambar2 tidak ditemukan.", 'status': "unsuccessful"})
+    return jsonify({"message": "Gambar2 tidak ditemukan.", 'status': "unsuccessful"}), 404
   try:
       # Muat gambar input dan referensi
       input_image = face_recognition.load_image_file(image1)
@@ -137,9 +141,9 @@ def recognize_and_validate():
 
       # Periksa apakah ada wajah di kedua gambar
       if len(input_encodings) == 0:
-          return jsonify({"error": "No face found in the input image.", 'status': "unsuccessful"})
+          return jsonify({"error": "No face found in the input image.", 'status': "unsuccessful"}), 404
       if len(reference_encodings) == 0:
-          return jsonify({"error": "No face found in the reference image.", 'status': "unsuccessful"})
+          return jsonify({"error": "No face found in the reference image.", 'status': "unsuccessful"}), 404
 
       # Ambil encoding wajah pertama
       input_encoding = input_encodings[0]
@@ -155,10 +159,10 @@ def recognize_and_validate():
           # "match": results[0],
           # "distance": distance,
           "message": "Face matched!" if results[0] else "Face did not match."
-      })
+      }), 200 if results[0] else 404
 
   except Exception as e:
-      return jsonify({"error": str(e)})
+      return jsonify({"error": str(e)}), 404
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

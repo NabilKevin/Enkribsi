@@ -4,15 +4,10 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\User;
-use App\Models\Office;
 use App\Models\Permit;
-use App\Models\Division;
-use App\Models\Schedule;
 use App\Models\Attendance;
 use Illuminate\Support\Str;
-use App\Models\Announcement;
 use Illuminate\Http\Request;
-use App\Models\WfaWfhSchedule;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
@@ -71,14 +66,12 @@ class HrController extends Controller
     {
         $range = isset($request->range) && in_array($request->range, ['daily', 'weekly', 'monthly']) ? $request->range : 'daily';
         $startDate = Carbon::now()->subDays(($range === 'daily') ? 0 : (($range === 'weekly') ? 7 : 30))->toDateString();
-        dd($startDate);
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get attendances',
             'data' => Attendance::whereBetween('date', [$startDate, Carbon::now()->toDateString])
         ], 200);
     }
-
     public function makeReport(Request $request)
     {
         $validator = Validator::make($request->all(), [

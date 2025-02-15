@@ -7,54 +7,67 @@ use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\PasswordReset;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Validator;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTFactory;
 
 class AuthController extends Controller
 {
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required',
-            'password' => 'required|min:6',
+            'email' => 'required|email:dns',
+            'password' => 'required',
             'remember_me' => 'boolean'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'unsuccesful',
+                'status' => 'unsuccessful',
                 'message' => 'Invalid fields',
                 'errors' => $validator->errors()
             ], 422);
         }
 
-        $data = $request->only(['username', 'password']);
+        $data = $request->only(['email', 'password']);
 
-        if(Auth::attempt($data)) {
-            $user = User::firstWhere('username', $data['username']);
-            $token = $request->remember_me ? $user->createToken('login')->plainTextToken : $user->createToken('login', ['*'], Carbon::now()->addDay())->plainTextToken;
-            $user['token'] = $token;
+        if($token = JWTAuth::attempt($data)) {
 
+            $ttl = $request->remember_me ? 43200 : 1440; // 30 hari vs 24 jam
+
+            // Set TTL secara dinamis menggunakan JWTFactory
+            $customClaims = ['exp' => now()->addMinutes($ttl)->timestamp];
+            $payload = JWTFactory::customClaims($customClaims)->make();
+
+            $token = JWTAuth::encode($payload);
             return response()->json([
                 'status' => 'successful',
-                'message' => 'Login successful',
-                'user'=> $user
-            ], 200);
+                'message' => 'Login successfully'
+            ])->withCookie(
+                'jwt_token', // Nama cookie
+                $token, // Token JWT
+                $ttl, // Durasi (menit)
+                '/', // Path
+                null, // Domain
+                env('APP_ENV') === 'production', // Secure (true jika HTTPS)
+                true, // HttpOnly
+                false // SameSite = None
+                );
         } else {
             return response()->json([
-                'status' => 'unsuccesful',
-                'message' => 'Username or password is incorrect'
+                'status' => 'unsuccessful',
+                'message' => 'Email or password is incorrect'
             ], 401);
         }
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
         return response()->json([
             'status' => 'successful',
             'message'=> 'Logout successful'
-        ],200);
+        ],200)->withCookie(Cookie::forget('jwt_token'));
     }
 
     public function forgotPassword(Request $request)
@@ -65,7 +78,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'unsuccesful',
+                'status' => 'unsuccessful',
                 'message' => 'Invalid fields',
                 'errors' => $validator->errors()
             ], 422);
@@ -98,7 +111,7 @@ class AuthController extends Controller
             ], 200);
         } else {
             return response()->json([
-                'status' => 'unsuccesful',
+                'status' => 'unsuccessful',
                 'message' => 'User not found'
             ], 404);
         }
@@ -113,7 +126,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'unsuccesful',
+                'status' => 'unsuccessful',
                 'message' => 'Invalid fields',
                 'errors' => $validator->errors()
             ], 422);
@@ -130,13 +143,13 @@ class AuthController extends Controller
             } else {
                 $passwordReset->delete();
                 return response()->json([
-                    'status' => 'unsuccesful',
+                    'status' => 'unsuccessful',
                     'message' => 'Token is expired'
                 ], 401);
             }
         } else {
             return response()->json([
-                'status' => 'unsuccesful',
+                'status' => 'unsuccessful',
                 'message' => 'Token is invalid'
             ], 401);
         }
@@ -152,7 +165,7 @@ class AuthController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'unsuccesful',
+                'status' => 'unsuccessful',
                 'message' => 'Invalid fields',
                 'errors' => $validator->errors()
             ], 422);
@@ -174,13 +187,13 @@ class AuthController extends Controller
                 ], 200);
             } else {
                 return response()->json([
-                    'status' => 'unsuccesful',
+                    'status' => 'unsuccessful',
                     'message' => 'Token is invalid'
                 ], 401);
             }
         } else {
             return response()->json([
-                'status' => 'unsuccesful',
+                'status' => 'unsuccessful',
                 'message' => 'User not found'
             ], 404);
         }

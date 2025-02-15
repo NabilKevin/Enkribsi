@@ -1,0 +1,38 @@
+@keyframes slideInPopUP {
+  0% {
+    top: -300px;
+  }
+
+  100% {
+    top: 30px;
+  }
+}
+@keyframes slideOutPopUP {
+  0% {
+    top: 30px;
+  }
+
+  100% {
+    top: -300px;
+  }
+}
+
+.popup-container {
+  min-width: 300px;
+  top: -300px;
+}
+
+.inPopUp {
+  animation: slideInPopUP .5s ease-in-out forwards;
+}
+.outPopUp {
+  animation: slideOutPopUP .5s ease-in-out forwards;
+}
+
+@media screen and (max-width: 450px) {
+  .popup-container {
+    min-width: none;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}

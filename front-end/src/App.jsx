@@ -1,27 +1,85 @@
 // import { useState } from "react";
-import { Route, Routes } from "react-router-dom";
-import { Home, Login } from "./routes";
-import { Header } from "./components";
-import "./css/index.css";
-import { useEffect } from "react";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import { Login } from "./pages/Public";
+import { Addphoto, Home, PrivateLayout, Statistics } from "./pages/Private";
+import { Header, Loading } from "./components";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import "./css/header/index.css";
+import "./css/main.css";
+import { BASE_URL_API } from "./config";
 
 function App() {
-  // useEffect(() => {
-  //   const token = localStorage.getItem("token");
-  //   const path = window.location.pathname.split("/")[1];
-  //   if (token && (path === "login" || path === "register")) {
-  //     window.location.href = "/";
-  //   } else if(!token && path !== "register" && path !== "login") {
-  //     window.location.href = "/login";
-  //   }
-  // }, []);
+  const navigate = useNavigate();
+  axios.defaults.withCredentials = true;
+  const [isHomepage, setIsHomepage] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const path = location.pathname.split('/')[1]
+  const [user, setUser] = useState()
+  const [showNotificationButton, setShowNotificationButton] = useState()
+
+  const check_auth = async () => {
+    
+    try {
+      const response = await axios.get(`${BASE_URL_API}/me`)
+      if(response.status === 200) {
+        if(path === 'login' || response.data.user?.face_img && path === 'addphoto') {
+          navigate('/')
+          setIsHomepage(true)
+        }
+        
+        if(!response.data.user?.face_img) {
+          navigate('/addphoto')
+          setIsHomepage(false)
+        }
+      }
+      
+      setUser(response.data.user)
+    } catch {
+      if(path !== 'login') {
+        navigate('/login')
+        setIsHomepage(false)
+      }
+    } finally {
+      setTimeout(() => {
+        setLoading(false)
+      }, 1)
+    }
+  }
+  
+  useEffect(() => {
+    if(path === '') {
+      setIsHomepage(true)
+    }
+    check_auth()
+  }, [])
   return (
     <>
-    <Header />
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-    </Routes>
+    { loading && <Loading /> }
+    <Header isHomepage={isHomepage} user={user} showNotificationButton={showNotificationButton} />
+
+    {
+      !loading && 
+        <Routes>
+          <Route path="/" element={
+            <PrivateLayout>
+              <Home setShowNotificationButton={setShowNotificationButton} />
+            </PrivateLayout>
+          } />
+          <Route path="/statistics" element={
+            <PrivateLayout>
+              <Statistics setShowNotificationButton={setShowNotificationButton} />
+            </PrivateLayout>
+          } />
+          <Route path="/addphoto" element={
+            <Addphoto check_auth={check_auth} setLoading={setLoading} />
+          } />
+
+          <Route path="/login" element={
+            <Login check_auth={check_auth} setLoading={setLoading} />
+          } />
+        </Routes>    
+    }
     </>
   );
 }

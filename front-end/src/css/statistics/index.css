@@ -1,0 +1,7 @@
+.muncul {
+  transition: all .5s ease;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  overflow-y: scroll;
+}
