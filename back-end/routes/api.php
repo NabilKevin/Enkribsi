@@ -53,6 +53,37 @@ Route::middleware(jwtMiddleware::class)->group(function () {
         Route::get('/permit', [BodController::class, 'getPermits']);
         Route::post('/permit/approve/{id}', [BodController::class, 'approvePermit']);
         Route::post('/permit/deny/{id}', [BodController::class, 'denyPermit']);
+    Route::prefix('hr')->group(function() {
+        Route::middleware(isHR::class)->group(function () {
+            Route::get('/permit/today', [HrController::class, 'getTodayPermits']);
+            Route::get('/employees', [HrController::class, 'getEmployees']);
+            Route::get('/employees/{id}', [HrController::class, 'getEmployee']);
+            Route::get('/attendances', [HrController::class, 'getAttendances']);
+            Route::post('/report', [HrController::class, 'makeReport']);
+            Route::resource('offices', OfficeController::class);
+            Route::resource('schedules', ScheduleController::class);
+            Route::resource('announcements', AnnouncementController::class);
+            Route::resource('wfawfhschedules', WfaWfhScheduleController::class);
+        });
+    });
+    Route::prefix('bod')->group(function() {
+        Route::middleware(isBOD::class)->group(function () {
+            Route::get('/permit', [BodController::class, 'getPermits']);
+            Route::post('/permit/approve/{id}', [BodController::class, 'approvePermit']);
+            Route::post('/permit/deny/{id}', [BodController::class, 'denyPermit']);
+            Route::post('/schedule/approve/{id}', [BodController::class, 'approveSchedule']);
+            route::post('/schedule/deny/{id}', [BodController::class, 'denySchedule']);
+            Route::post('/wfawfhschedule/approve/{id}', [BodController::class, 'approveWfaWfhSchedule']);
+            Route::post('wfaWfhSchedule/deny/{id}', [BodController::class, 'denyWfaWfhSchedule']);
+            Route::get('/statistics', [BodController::class, 'getStatistics']);
+            Route::get('/employees', [BodController::class, 'getEmployees']);
+            Route::get('/employees/{id}', [BodController::class, 'getEmployee']);
+            Route::get('/attendances', [BodController::class, 'getAttendances']);
+            Route::get('/offices', [BodController::class, 'getOffices']);
+            Route::get('/office/{id}', [BodController::class, 'getOffice']);
+            Route::post('/office/approve/{id}', [BodController::class, 'approveOffice']);
+            Route::post('/office', [BodController::class, 'storeOffice']);
+        });
     });
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
