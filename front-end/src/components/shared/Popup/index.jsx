@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 
 /* eslint-disable react/prop-types */
-const Popup = ({slide, handleOutPopUp, popupRef}) => {
+const Popup = ({slide, handleOutPopup, popupRef, title, content, setShowPopup}) => {
     useEffect(() => {
         import('@/css/popup/index.css')
     }, [])
@@ -10,10 +10,10 @@ const Popup = ({slide, handleOutPopUp, popupRef}) => {
           <div className="w-100 p-4 popup z-2 bg-white shadow-lg rounded" 
               style={{ maxWidth: '400px', border: '1px solid #ddd' }}>
               <div className="d-flex flex-column align-items-start">
-                  <span><strong>Reminder!</strong></span>
-                  <p className="fs-5 m-0 mb-3 mt-2 text-dark">Kamu belum absen hari ini!</p>
+                  <span className="fw-bolder mb-1" style={{ fontSize: '18px' }}>{title}</span>
+                  <p className="fs-5 m-0 mb-3 mt-2 text-dark">{content}</p>
               </div>
-              <button className="btn btn-danger me-2" onClick={handleOutPopUp}>Tutup</button>
+              <button className="btn btn-danger me-2" onClick={() => handleOutPopup({setShowPopup})}>Tutup</button>
           </div>
       </div>
   )

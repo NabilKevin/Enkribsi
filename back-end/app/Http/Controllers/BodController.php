@@ -140,7 +140,7 @@ class BodController extends Controller
         Notification::create([
             'user_id' => $permit->user_id,
             'title' => 'Perizinan Anda Telah Disetujui!',
-            'content' => 'Kami dengan senang hati memberitahukan bahwa permohonan izin Anda telah disetujui. Terima kasih atas kerja sama Anda.'
+            'content' => 'Kami dengan senang hati memberitahukan bahwa permohonan izin Anda telah disetujui.'
         ]);
 
         return response()->json([

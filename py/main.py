@@ -110,59 +110,62 @@ def is_face_facing_camera():
             return jsonify({"message": "Wajah tidak menghadap ke kamera.", 'status': "unsuccessful"}), 422
 @app.route('/validasiwajah', methods=['POST'])
 def recognize_and_validate():
-  data = request.json
-  if not isinstance(data, dict):
-    return jsonify({'error': 'Data harus berupa JSON object'}), 400
-  if 'image1' not in data or 'image2' not in data:
-    return jsonify({'error': 'Field "image1" atau "image2" harus ada'}), 404
-  
-  decoded_data1 = base64.b64decode(data['image1'])
-  decoded_data2 = base64.b64decode(data['image2'])
+    # Ambil data JSON dari request
+    data = request.json
+    if not isinstance(data, dict):
+        return jsonify({'message': 'Data harus berupa JSON object'}), 400
+    if 'image1' not in data or 'image2' not in data:
+        return jsonify({'message': 'Field "image1" atau "image2" harus ada'}), 400
 
-  nparr1 = np.frombuffer(decoded_data1, np.uint8)
-  nparr2 = np.frombuffer(decoded_data2, np.uint8)
+    try:
+        # Decode base64 image data
+        decoded_data1 = base64.b64decode(data['image1'])
+        decoded_data2 = base64.b64decode(data['image2'])
 
-  # Decode gambar menggunakan OpenCV
-  image1 = cv2.imdecode(nparr1, cv2.IMREAD_COLOR)
-  image2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
+        # Konversi ke array NumPy
+        nparr1 = np.frombuffer(decoded_data1, np.uint8)
+        nparr2 = np.frombuffer(decoded_data2, np.uint8)
 
-  if image1 is None:
-    return jsonify({"message": "Gambar1 tidak ditemukan.", 'status': "unsuccessful"}), 404
-  if image2 is None:
-    return jsonify({"message": "Gambar2 tidak ditemukan.", 'status': "unsuccessful"}), 404
-  try:
-      # Muat gambar input dan referensi
-      input_image = face_recognition.load_image_file(image1)
-      reference_image = face_recognition.load_image_file(image2)
+        # Decode gambar menggunakan OpenCV
+        image1 = cv2.imdecode(nparr1, cv2.IMREAD_COLOR)
+        image2 = cv2.imdecode(nparr2, cv2.IMREAD_COLOR)
 
-      # Ekstrak encoding wajah
-      input_encodings = face_recognition.face_encodings(input_image)
-      reference_encodings = face_recognition.face_encodings(reference_image)
+        if image1 is None:
+            return jsonify({"message": "Gambar1 tidak valid.", 'status': "unsuccessful"}), 400
+        if image2 is None:
+            return jsonify({"message": "Gambar2 tidak valid.", 'status': "unsuccessful"}), 400
 
-      # Periksa apakah ada wajah di kedua gambar
-      if len(input_encodings) == 0:
-          return jsonify({"error": "No face found in the input image.", 'status': "unsuccessful"}), 404
-      if len(reference_encodings) == 0:
-          return jsonify({"error": "No face found in the reference image.", 'status': "unsuccessful"}), 404
+        # Konversi gambar OpenCV (BGR) ke RGB untuk face_recognition
+        input_image = cv2.cvtColor(image1, cv2.COLOR_BGR2RGB)
+        reference_image = cv2.cvtColor(image2, cv2.COLOR_BGR2RGB)
 
-      # Ambil encoding wajah pertama
-      input_encoding = input_encodings[0]
-      reference_encoding = reference_encodings[0]
+        # Ekstrak encoding wajah
+        input_encodings = face_recognition.face_encodings(input_image)
+        reference_encodings = face_recognition.face_encodings(reference_image)
 
-      # Bandingkan wajah
-      results = face_recognition.compare_faces([reference_encoding], input_encoding, tolerance=0.4)
-      distance = face_recognition.face_distance([reference_encoding], input_encoding)[0]
+        # Periksa apakah ada wajah di kedua gambar
+        if len(input_encodings) == 0:
+            return jsonify({"message": "Tidak ada wajah ditemukan di gambar input.", 'status': "unsuccessful"}), 400
+        if len(reference_encodings) == 0:
+            return jsonify({"message": "Tidak ada wajah ditemukan di gambar referensi.", 'status': "unsuccessful"}), 400
 
-      # Kembalikan hasil
-      return jsonify({
-          'status': "successful" if results[0] else "unsuccessful",
-          # "match": results[0],
-          # "distance": distance,
-          "message": "Face matched!" if results[0] else "Face did not match."
-      }), 200 if results[0] else 404
+        # Ambil encoding wajah pertama
+        input_encoding = input_encodings[0]
+        reference_encoding = reference_encodings[0]
 
-  except Exception as e:
-      return jsonify({"error": str(e)}), 404
+        # Bandingkan wajah
+        results = face_recognition.compare_faces([reference_encoding], input_encoding, tolerance=0.4)
+        distance = face_recognition.face_distance([reference_encoding], input_encoding)[0]
 
+        # Kembalikan hasil
+        return jsonify({
+            'status': "successful" if results[0] else "unsuccessful",
+            'message': "Wajah cocok!" if results[0] else "Wajah tidak cocok.",
+            'distance': float(distance)  # Tambahkan jarak untuk debugging
+        }), 200 if results[0] else 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

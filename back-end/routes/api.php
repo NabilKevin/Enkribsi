@@ -80,6 +80,7 @@ Route::middleware(jwtMiddleware::class)->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::post('/checklocation', [AbsenController::class, 'checkLocation']);
+    Route::post('/checkschedulewfah', [AbsenController::class, 'checkScheduleWfah']);
     Route::post('/absent', [AbsenController::class, 'absent']);
     Route::post('/permit', [AbsenController::class, 'storePermit']);
     Route::post('/permit/cancel/{id}', [AbsenController::class, 'cancelPermit']);
@@ -87,7 +88,8 @@ Route::middleware(jwtMiddleware::class)->group(function () {
     Route::get('/presences', [AbsenController::class, 'getPresences']);
     Route::get('/presence', [AbsenController::class, 'getPresence']);
     Route::get('/attendance', [AbsenController::class, 'getAttendance']);
-    Route::get('/permit', [AbsenController::class, 'getPermits']);
+    Route::get('/permits', [AbsenController::class, 'getPermits']);
+    Route::get('/offices', [AbsenController::class, 'getOffices']);
 
     Route::post('/addphoto', [UserController::class, 'addPhotoProfile']);
     Route::get('/me', [UserController::class, 'me']);

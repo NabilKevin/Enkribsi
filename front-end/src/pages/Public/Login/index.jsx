@@ -3,8 +3,9 @@ import  {useNavigate} from "react-router-dom";
 import axios from "axios";
 import { useState } from "react";
 import { BASE_URL_API } from "@/config";
+import { API_ENDPOINTS } from "../../../config";
 
-const Login = ({check_auth}) => {
+const Login = ({checkAuth}) => {
   const navigate = useNavigate();
   const [error, setError] = useState()
 
@@ -22,9 +23,9 @@ const Login = ({check_auth}) => {
         }
       })
       
-      await axios.post(`${BASE_URL_API}/auth/login`, authdata)
+      await axios.post(`${BASE_URL_API}${API_ENDPOINTS.LOGIN}`, authdata)
       navigate('/')
-      check_auth()
+      checkAuth()
     } catch(err) {
       
       setError(err.response?.data);

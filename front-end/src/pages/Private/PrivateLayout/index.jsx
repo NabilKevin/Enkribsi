@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import Footer from "@/components/Footer"
+import { Footer } from "@/components"
 
 const PrivateLayout = ({children}) => {
   return (
