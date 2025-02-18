@@ -1,0 +1,36 @@
+.card-custom {
+  position: relative;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.card-custom::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 20px solid white;
+}
+.card-custom h4 {
+  margin-bottom: 10px;
+}
+.card-custom p {
+  margin-bottom: 20px;
+}
+.card-custom a {
+  float: right;
+}
+
+input[type="checkbox"] {
+  transform: scale(1.5);
+}
+
+.row {
+  justify-content: center;
+}

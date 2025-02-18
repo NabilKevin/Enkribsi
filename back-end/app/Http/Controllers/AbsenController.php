@@ -341,14 +341,14 @@ class AbsenController extends Controller
         if(!$attendance) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => "You haven't been absent today"
+                'message' => "Kamu belum absen hari ini"
             ], 403);
         }
 
         if(!Carbon::now()->gt($attendance->office->schedules->firstWhere('status', 'active')->check_out_time)) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => "You can't leave before work end time"
+                'message' => "Kamu tidak bisa pulang sebelum waktu pulang"
             ], 403);
         }
 

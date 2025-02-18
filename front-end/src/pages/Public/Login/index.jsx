@@ -1,12 +1,10 @@
 /* eslint-disable react/prop-types */
-import  {useNavigate} from "react-router-dom";
 import axios from "axios";
 import { useState } from "react";
 import { BASE_URL_API } from "@/config";
 import { API_ENDPOINTS } from "../../../config";
 
 const Login = ({checkAuth}) => {
-  const navigate = useNavigate();
   const [error, setError] = useState()
 
   const handleSubmit = async (e) => {
@@ -24,7 +22,7 @@ const Login = ({checkAuth}) => {
       })
       
       await axios.post(`${BASE_URL_API}${API_ENDPOINTS.LOGIN}`, authdata)
-      navigate('/')
+      location.replace('/')
       checkAuth()
     } catch(err) {
       

@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BASE_URL_API, API_ENDPOINTS } from '@/config'
-import { StatsCard, StatsTable, Loading, Piechart } from '@/components/'
+import { StatsCard, StatsTable, Loading, Piechart, Container, Col, Row } from '@/components/'
 
 function Statistics({setShowNotificationButton}) {
   const [statistics, setStatistics] = useState();
@@ -108,43 +108,43 @@ function Statistics({setShowNotificationButton}) {
     {loading && <Loading />}
     {
       !loading && 
-      <div className="container-fluid mt-5 mb-2">
-          <div className="row">
-              <div className="col-md-6 offset-md-3">
-                  <div>
-                      <div>
-                        {
-                          statistics ? Object.values(statistics).every(value => value === 0) ? <h1 className='text-center'>Kamu belum pernah absen!</h1> : 
-                          <>
-                            <div className='d-flex justify-content-center'>
-                              <Piechart statistics={statistics} />
-                            </div>
-                            <div className="mt-4">
-                              <StatsCard presence={presence} type={'hadir'} getPresence={getPresence} />
-                              {presence.presence === 'hadir' &&
-                                <StatsTable isOpen={isOpen.hadir} presence={presence} type={'hadir'} list={list} />
-                              }
-                              <StatsCard presence={presence} type={'izin'} getPresence={getPresence} />
-                              {presence.presence === 'izin' &&
-                                <StatsTable isOpen={isOpen.izin} presence={presence} type={'izin'} list={list} />
-                              }
-                              <StatsCard presence={presence} type={'telat'} getPresence={getPresence} />
-                              {presence.presence === 'telat' &&
-                                <StatsTable isOpen={isOpen.telat} presence={presence} type={'telat'} list={list} />
-                              }
-                              <StatsCard presence={presence} type={'alfa'} getPresence={getPresence} />
-                              {presence.presence === 'alfa' &&
-                                <StatsTable isOpen={isOpen.alfa} presence={presence} type={'alfa'} list={list} />
-                              }
-                            </div>
-                          </>
-                          : ''
+      <Container size={'-fluid'}>
+        <Row>
+          <Col size={'-md-6'} addClass={"offset-md-3"}>
+            <div>
+                <div>
+                  {
+                    statistics ? Object.values(statistics).every(value => value === 0) ? <h1 className='text-center'>Kamu belum pernah absen!</h1> : 
+                    <>
+                      <div className='d-flex justify-content-center'>
+                        <Piechart statistics={statistics} />
+                      </div>
+                      <div className="mt-4">
+                        <StatsCard presence={presence} type={'hadir'} getPresence={getPresence} />
+                        {presence.presence === 'hadir' &&
+                          <StatsTable isOpen={isOpen.hadir} presence={presence} type={'hadir'} list={list} />
+                        }
+                        <StatsCard presence={presence} type={'izin'} getPresence={getPresence} />
+                        {presence.presence === 'izin' &&
+                          <StatsTable isOpen={isOpen.izin} presence={presence} type={'izin'} list={list} />
+                        }
+                        <StatsCard presence={presence} type={'telat'} getPresence={getPresence} />
+                        {presence.presence === 'telat' &&
+                          <StatsTable isOpen={isOpen.telat} presence={presence} type={'telat'} list={list} />
+                        }
+                        <StatsCard presence={presence} type={'alfa'} getPresence={getPresence} />
+                        {presence.presence === 'alfa' &&
+                          <StatsTable isOpen={isOpen.alfa} presence={presence} type={'alfa'} list={list} />
                         }
                       </div>
-                  </div>
+                    </>
+                    : ''
+                  }
               </div>
-          </div>
-      </div>
+            </div>
+          </Col>
+        </Row>
+      </Container>
     }
     </>
   );

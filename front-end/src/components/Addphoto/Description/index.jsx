@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-const Description = ({setPage, grant}) => {
+const Description = ({setPage, granted}) => {
   return (
     <div className="container mt-4">
       <h1 className="text-center">Tambahkan Foto untuk Validasi Wajah</h1>
@@ -25,7 +25,7 @@ const Description = ({setPage, grant}) => {
         </li>
       </ol>
       <div className="d-flex w-100 align-items-center justify-content-center">
-        <button className="btn btn-danger" onClick={() => setPage(2)} disabled={!grant}>Lanjutkan</button>
+        <button className="btn btn-danger" onClick={() => setPage(2)} disabled={!granted}>Lanjutkan</button>
       </div>
     </div>
   )

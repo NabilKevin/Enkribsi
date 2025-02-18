@@ -1,14 +1,14 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
-import axios from "axios";
 import { useEffect, useRef, useState } from "react"
-import { BASE_URL_API, API_ENDPOINTS } from "@/config";
-import { useNavigate } from "react-router-dom";
 import { Webcam, FormAbsen } from "@/components";
 import { handleInPopup } from '@/utils/Popup';
 import { checkPermission } from '@/utils/Permission';
-import { Loading } from "@/components";
+import { getOffices, getLocation, checkLocation, handleSubmitAbsen } from '@/utils/Api';
+import { stopWebcam } from '@/utils/Webcam';
+import { Loading, Container } from "@/components";
 
-const Absen = ({setShowNotificationButton, setShowPopup, children, setIsHomepage}) => {
+const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   const [webcamStream, setWebcamStream] = useState(null);
   const [imageSrc, setImageSrc] = useState(null); // Untuk menyimpan hasil foto
   const [page, setPage] = useState(1)
@@ -24,126 +24,87 @@ const Absen = ({setShowNotificationButton, setShowPopup, children, setIsHomepage
     image: imageSrc
   })
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const navigate = useNavigate()
+  const canvasRef = useRef(null)
 
-  const checkLocationPermission = () => {
-    const ifGrantedFunction = () => {
+  const checkLocationPermission = async () => {
+    const callback = () => {
       setGrant(prev => ({...prev, location: true}))
     }
-    checkPermission({name: 'geolocation', permitType: 'lokasi', setShowPopup, ifGrantedFunction})
+    await checkPermission({name: 'geolocation', permitType: 'lokasi', setShowPopup, callback})
   }
-  const checkWebcamPermission = () => {
-    const ifGrantedFunction = () => {
+  const checkWebcamPermission = async () => {
+    const callback = () => {
       setGrant(prev => ({...prev, webcam: true}))
     }
-    checkPermission({name: 'camera', permitType: 'kamera', setShowPopup, ifGrantedFunction})
+    await checkPermission({name: 'camera', permitType: 'kamera', setShowPopup, callback})
   }
 
-  const getLocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setData(prev => ({...prev, lat: latitude, lon: longitude }));
-        },
-        (error) => {
-          console.error("Error getting location:", error.message);
-        }
-      );
-    } else {
-      alert("Geolocation is not supported by this browser.");
-    }
-  };
-
-  // Fungsi untuk menghentikan akses webcam
-  const stopWebcam = () => {
-    if (webcamStream) {
-      const tracks = webcamStream.getTracks();
-      tracks.forEach((track) => track.stop());
-      setWebcamStream(null);
-    }
-  };
-
-  const getOffices = async () => {
-    try {
-      const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.OFFICES}`)
-      setOffices(response.data?.data)
-      setLoading(false)
-    } catch(e) {
-      console.error(e);
-      
-    }
+  const checkAllPermission = async () => {
+    await checkLocationPermission()
+    await checkWebcamPermission()
   }
 
   const handleSubmit = async e => {
-    setIsSubmitting(true)
-    e.preventDefault()
-    try {
-      await axios.post(`${BASE_URL_API}${API_ENDPOINTS.ABSEN}`, data)
-      
-      stopWebcam()
-      navigate('/')
-      setIsHomepage(true)
-    } catch(e) {
-      setIsSubmitting(false)
-      console.log(e.response.data);
-      
-      handleInPopup({title: 'Alert!', content: e.response.data?.message, setShowPopup})
-    }
+    await handleSubmitAbsen({e, setIsSubmitting, setShowPopup, data, callback: () => {
+      handleStopWebcam()
+      location.replace('/')
+    }})
   }
+
   const handleCheckLocation = async e => {
-    e.preventDefault();
-    const formData = {};
-    [...e.target].forEach(element => {
-      setData(prev => ({
-        ...prev,
-        [element.name]: element.value
-      }))
-      formData[element.name] = element.value
+    const obj = await checkLocation({
+      ifSuccess: () => setPage(2),
+      e, data, setShowPopup
     })
 
-    formData['lat'] = data.lat 
-    formData['lon'] = data.lon
+    for(const key in obj) {
+      setData(prev => ({
+        ...prev,
+        [key]: obj[key]
+      }))
+    }
+  }
 
+  const handleStopWebcam = () => {
+    stopWebcam({webcamStream, setWebcamStream})
+  }
+
+  const fetch_data = async () => {
+    checkAllPermission()
     try {
-      await axios.post(`${BASE_URL_API}${e.target.work_type.value === 'wfo' ? API_ENDPOINTS.CHECKLOCATION : API_ENDPOINTS.CHECKSCHEDULEWFAH}`, formData)
-      
-      
-      setPage(2)
+      setOffices(await getOffices({setShowPopup}))
     } catch(e) {
-      
-      handleInPopup({title: 'Alert!', content: e.response.data?.message, setShowPopup})
+      handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+    } finally {
+      setLoading(false)
     }
   }
 
   useEffect(() => {
-    checkLocationPermission()
-    checkWebcamPermission()
+    fetch_data()
     setShowNotificationButton(false)
-    getOffices()
   }, [])
   useEffect(() => {
     if(grant?.location) {
-      getLocation()
+      getLocation({setShowPopup, callback: setData})
     }
-    
   }, [grant])
+
   useEffect(() => {
     setData(prev => ({
       ...prev,
       image: imageSrc
     }))
   }, [imageSrc])
+
   return (
     <>
       {loading ? <Loading /> :
         <>
         {children}
-        <div className="container mt-5">
-
-          { page === 1 ? <FormAbsen grant={grant} offices={offices} handleCheckLocation={handleCheckLocation} /> : <Webcam isSubmitting={isSubmitting} imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} stopWebcam={stopWebcam} />}
-        </div>
+        <Container>
+          { page === 1 ? <FormAbsen grant={grant} offices={offices} handleCheckLocation={handleCheckLocation} /> : <Webcam isSubmitting={isSubmitting} imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} handleStopWebcam={handleStopWebcam} />}
+        </Container>
         </>
       } 
     </>

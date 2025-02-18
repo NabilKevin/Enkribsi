@@ -55,7 +55,7 @@ class UserController extends Controller
             'status' => 'successful',
             'message' => 'Photo successfuly uploaded',
             'data' => $response->json()
-        ]);
+        ], 200);
     }
 
     public function me(Request $request)

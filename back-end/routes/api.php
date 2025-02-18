@@ -96,6 +96,6 @@ Route::middleware(jwtMiddleware::class)->group(function () {
 
     Route::get('/notifications/count', [NotificationController::class, 'getNotificationsCount']);
     Route::get('/notifications', [NotificationController::class, 'getNotifications']);
-    Route::get('/notifications/{id}', [NotificationController::class, 'getNotification']);
-    Route::delete('/notifications', [NotificationController::class, 'deleteNotifications']);
+    Route::get('/notifications/{slug}', [NotificationController::class, 'getNotification']);
+    Route::post('/notifications', [NotificationController::class, 'deleteNotifications']);
 });

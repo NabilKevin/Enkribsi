@@ -7,3 +7,14 @@
 .header h1 {
   margin: 0;
 }
+
+.notificationAlert {
+  left: 80%;
+  background-color: black; 
+}
+
+.btn-transparent {
+  background-color: transparent;
+  outline: none;
+  border: none;
+}

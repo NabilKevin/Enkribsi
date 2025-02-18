@@ -71,6 +71,14 @@ class BodController extends Controller
             'status' => 'denied',
             'bod_reason' => $request->bod_reason
         ]);
+
+        Notification::create([
+            'user_id' => $permit->user_id,
+            'title' => 'Perizinan Anda Telah Ditolak!',
+            'excerpt' => "Pengajuan izin kerja Anda pada tanggal " . Carbon::parse($permit->date)->toDateString(),
+            'content' => "<p>Pengajuan izin kerja Anda pada tanggal " . Carbon::parse($permit->date)->toDateString() ." belum dapat disetujui.</p> <p>Alasan: " . $request->bod_reason . ".</p> <p>Silakan hubungi atasan atau HRD untuk informasi lebih lanjut.</p><p>Terima kasih.</p>"
+        ]);
+
         return response()->json([
             'status' => 'successful',
             'message' => 'Permit successfuly denied',
@@ -140,7 +148,8 @@ class BodController extends Controller
         Notification::create([
             'user_id' => $permit->user_id,
             'title' => 'Perizinan Anda Telah Disetujui!',
-            'content' => 'Kami dengan senang hati memberitahukan bahwa permohonan izin Anda telah disetujui.'
+            'excerpt' => "Pengajuan izin kerja Anda pada tanggal " . Carbon::parse($permit->date)->toDateString(),
+            'content' => "<p>Pengajuan izin kerja Anda pada tanggal " . Carbon::parse($permit->date)->toDateString() ." telah disetujui.</p> <p>Silakan pastikan kembali rencana Anda sesuai dengan pengajuan.</p> <p>Terima kasih.</p>"
         ]);
 
         return response()->json([

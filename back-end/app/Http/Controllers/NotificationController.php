@@ -15,9 +15,7 @@ class NotificationController extends Controller
         return response()->json([
             'status' => 'successful',
             'message' => 'Notification count successfully gotten',
-            'data' => [
-                'count' => $notifications
-            ]
+            'data' => $notifications
         ], 200);
     }
     public function getNotifications(Request $request)
@@ -26,19 +24,19 @@ class NotificationController extends Controller
         return response()->json([
             'status' => 'successful',
             'message' => 'Notifications successfully gotten',
-            'data' => $notifications->select(['title', 'content'])
+            'data' => $notifications->select(['title', 'excerpt', 'slug'])
         ], 200);
     }
-    public function getNotification($id)
+    public function getNotification($slug)
     {
-        $notification = Notification::find($id);
+        $notification = Notification::firstWhere('slug', $slug);
         if(!$notification) {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => 'Notifications not found'
             ], 404);
         }
-        $notification->update(['is_read', true]);
+        $notification->update(['is_read' => true]);
         return response()->json([
             'status' => 'successful',
             'message' => 'Notification successfully gotten',
@@ -48,8 +46,8 @@ class NotificationController extends Controller
     public function deleteNotifications(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id' => 'required|array',
-            'id.*' => 'integer|exists:notifications,id'
+            'slugs' => 'required|array',
+            'slugs.*' => 'string|exists:notifications,slug'
         ]);
 
         if($validator->fails()) {
@@ -57,15 +55,15 @@ class NotificationController extends Controller
                 'status' => 'unsuccessful',
                 'message' => 'Invalid field',
                 'errors' => $validator->errors()
-            ], 200);
+            ], 422);
         }
 
-        foreach($request->id as $id) {
-            Notification::find($id)->delete();
+        foreach($request->slugs as $slug) {
+            Notification::firstWhere('slug', $slug)->delete();
         }
         return response()->json([
             'status' => 'successful',
-            'message' => 'Notification(s) successfully deleted'
+            'message' => 'Berhasil menghapus notifikasi!'
         ], 200);
     }
 }

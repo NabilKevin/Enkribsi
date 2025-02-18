@@ -85,7 +85,7 @@ class HrController extends Controller
                 'status' => 'unsuccessful',
                 'message' => 'Invalid field',
                 'errors' => $validator->errors()
-            ], 200);
+            ], 422);
         }
 
         if(isset($request->range)) {

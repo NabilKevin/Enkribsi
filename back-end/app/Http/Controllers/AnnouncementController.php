@@ -34,7 +34,7 @@ class AnnouncementController extends Controller
                 'status' => 'unsuccessful',
                 'message' => 'Invalid field',
                 'errors' => $validator->errors()
-            ], 200);
+            ], 422);
         }
 
         $data = $request->all();
@@ -71,7 +71,7 @@ class AnnouncementController extends Controller
                 'status' => 'unsuccessful',
                 'message' => 'Invalid field',
                 'errors' => $validator->errors()
-            ], 200);
+            ], 422);
         }
 
         $data = $request->all();

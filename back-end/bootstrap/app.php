@@ -23,5 +23,5 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 401);
         });
     })->withSchedule(function(Schedule $schedule){
-        $schedule->command('tokens:delete-expired')->daily();
+        $schedule->command('app:check-absent')->dailyAt('23:59');
     })->create();

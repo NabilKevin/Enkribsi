@@ -1,8 +1,23 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import { getNotificationCount } from "@/utils/Api"
+import { useEffect, useState } from "react"
 
 /* eslint-disable react/prop-types */
-const Header = ({isHomepage, user, showNotificationButton}) => {
+const Header = ({isHomepage, user, showNotificationButton, isLongClicked, setIsLongClicked, setShowPopup}) => {
+  const [notifCount, setNotifCount] = useState()
+
+  const fetch_data = async () => {
+    setNotifCount(await getNotificationCount({setShowPopup}));
+  }
+
   const path = location.pathname.split('/')[1].toLowerCase()
   const onlyLogoPath = ['login', 'addphoto']
+
+  useEffect(() => {
+    if(showNotificationButton) {
+      fetch_data()
+    }
+  }, [showNotificationButton])
   
   return (
     <div className="header position-fixed top-0 start-0 end-0 z-1">
@@ -10,21 +25,34 @@ const Header = ({isHomepage, user, showNotificationButton}) => {
         {!showNotificationButton && <div>
             {
               !showNotificationButton && !onlyLogoPath.includes(path) &&
-              <a href="/" className="text-decoration-none d-flex">
+              <>
+              {!isLongClicked ? 
+              <a href={`/${path === 'notification' ? 'notifications' : ''}`} className="text-decoration-none d-flex">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" className="bi bi-chevron-left" viewBox="0 0 16 16">
                   <path fillRule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
                 </svg>
-              </a>
+              </a>  
+              :
+              <button className="btn-transparent" onClick={() => setIsLongClicked(false)}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" fill="white" className="bi bi-x pointer" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+              </svg>
+              </button>
+              }
+              </>
             }
           </div>}
           <a href="/" className="text-decoration-none text-white"><h2 className="m-0">Enkribsi</h2></a>
           <div>
             {
               showNotificationButton && !onlyLogoPath.includes(path) &&
-              <a href="" className="text-decoration-none d-flex">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" className="bi bi-bell-fill" viewBox="0 0 16 16">
+              <a href="/notifications" className="text-decoration-none d-flex position-relative">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="white" className="bi bi-bell-fill" viewBox="0 0 16 16">
                   <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/>
                 </svg>
+                {
+                  notifCount && <span className="position-absolute top-0 notificationAlert translate-middle badge border border-light rounded-circle bg-danger"><span>{notifCount}</span></span> 
+                }
               </a>
             }
           </div>

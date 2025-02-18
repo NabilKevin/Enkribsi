@@ -36,7 +36,7 @@ class OfficeController extends Controller
                 'status' => 'unsuccessful',
                 'message' => 'Invalid field',
                 'errors' => $validator->errors()
-            ], 200);
+            ], 422);
         }
 
         $data = $request->all();
@@ -79,7 +79,7 @@ class OfficeController extends Controller
                 'status' => 'unsuccessful',
                 'message' => 'Invalid field',
                 'errors' => $validator->errors()
-            ], 200);
+            ], 422);
         }
 
         $data = $request->all();
@@ -98,7 +98,7 @@ class OfficeController extends Controller
     public function destroy(Request $request, $id)
     {
         $announcement = Announcement::find($id);
-        
+
         if(! $announcement) {
             return response()->json([
                 'status' => 'unsuccessful',
@@ -107,7 +107,7 @@ class OfficeController extends Controller
         }
 
         $announcement->delete();
-        
+
         return response()->json([
             'status' => 'successful',
             'message' => 'Announcement successfully deleted'

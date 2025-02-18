@@ -1,39 +1,46 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // import { useState } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
-import { Login, NotFound } from "./pages/Public";
-import { Addphoto, Home, PrivateLayout, Statistics, Absen } from "./pages/Private";
-import { Header, Loading, Popup } from "./components";
+import { Addphoto, Home, PrivateLayout, Statistics, Absen, Notifications, Notification } from "./pages/Private";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { handleOutPopup, handleClickOutside } from '@/utils/Popup';
+import { API_ENDPOINTS, BASE_URL_API } from "./config";
+import { Header, Loading, Popup } from "./components";
+import { Login, NotFound } from "./pages/Public";
+import { Route, Routes } from "react-router-dom";
 import axios from "axios";
 import "./css/header/index.css";
 import "./css/main.css";
-import { API_ENDPOINTS, BASE_URL_API } from "./config";
-import { handleOutPopup, handleClickOutside } from '@/utils/Popup';
 
 function App() {
-  const navigate = useNavigate();
   axios.defaults.withCredentials = true;
+
+  const [showNotificationButton, setShowNotificationButton] = useState()
+  const [isLongClicked, setIsLongClicked] = useState(false)
   const [isHomepage, setIsHomepage] = useState(false)
+  const [showPopup, setShowPopup] = useState({show: false, slide: 'in', title: '', content: ''})
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState()
-  const [showNotificationButton, setShowNotificationButton] = useState()
-  const [showPopup, setShowPopup] = useState({show: false, slide: 'in', title: '', content: ''})
-  const path = location.pathname.split('/')[1]
+
   const popupRef = useRef(null)
+
+  const path = location.pathname.split('/')[1]
 
   const shouldNavigateToHome = (user) => {
     return path === 'login' || (user?.face_img && path === 'addphoto');
   };
   
+  const handleErrorNavigation = () => {
+    if(path !== 'login') {
+      location.replace('/login');
+    }
+  };
   const handleSuccessNavigation = (response) => {
     const user = response.data.user;
   
     if (shouldNavigateToHome(user)) {
-      navigate('/');
-      setIsHomepage(true);
-    } else if (!user?.face_img) {
-      navigate('/addphoto');
-      setIsHomepage(false);
+      location.replace('/');
+    } else if (!user?.face_img && path !== 'addphoto') {
+      location.replace('/addphoto');
     }
   };
 
@@ -46,33 +53,28 @@ function App() {
       console.error('Error fetching user data:', e.message);
 
       if (e.response && e.response.status === 401) {
-        if(path !== 'login') {
-          navigate('/login');
-          setIsHomepage(false);
-        }
+        handleErrorNavigation()
       } else {
-        alert('Terjadi kesalahan saat memuat data pengguna.');
+        alert('Terjadi kesalahan saat memuat data pengguna. mohon refresh page anda');
       }
     } finally {
-      setLoading(false)
+      setTimeout(() => {
+        setLoading(false)
+      }, 500)
     }
   }
-  
-  useEffect(() => {
-    if(path === '') {
-      setIsHomepage(true)
-    }
-    import('bootstrap/dist/js/bootstrap.bundle.min.js');
-    checkAuth()
-  }, [])
 
   const stableHandleClickOutside = useCallback(
     (e) => handleClickOutside(e, popupRef, setShowPopup),
     [popupRef, setShowPopup]
   );
+  
+  useEffect(() => {
+    import('bootstrap/dist/js/bootstrap.bundle.min.js');
+    checkAuth()
+  }, [])
 
   useEffect(() => {
-    console.log(showPopup?.show);
     
     if (showPopup?.show) {
       document.addEventListener('click', stableHandleClickOutside);
@@ -88,14 +90,14 @@ function App() {
   return (
     <>
     { loading && <Loading /> }
-    <Header isHomepage={isHomepage} user={user} showNotificationButton={showNotificationButton} />
+    <Header setShowPopup={setShowPopup} isLongClicked={isLongClicked} setIsLongClicked={setIsLongClicked} isHomepage={isHomepage} user={user} showNotificationButton={showNotificationButton} />
 
     {
       !loading && 
         <Routes>
           <Route path="/" element={
             <PrivateLayout>
-              <Home setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton}>
+              <Home setIsHomepage={setIsHomepage} setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton}>
               {
                 showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
               }
@@ -109,15 +111,29 @@ function App() {
           } />
           <Route path="/absen" element={
             <PrivateLayout>
-              <Absen setIsHomepage={setIsHomepage} setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton}>
+              <Absen setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton}>
               {
                 showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
               }
               </Absen>
             </PrivateLayout>
           } />
+          <Route path="/notifications" element={
+            <PrivateLayout>
+              <Notifications isLongClicked={isLongClicked} setIsLongClicked={setIsLongClicked} setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton}>
+                {
+                  showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                }
+              </Notifications>
+            </PrivateLayout>
+          } />
+          <Route path="/notification/:slug" element={
+            <PrivateLayout>
+              <Notification setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton} />
+            </PrivateLayout>
+          } />
           <Route path="/addphoto" element={
-            <Addphoto checkAuth={checkAuth} setLoading={setLoading} setShowPopup={setShowPopup}  setShowPopup={setShowPopup}>
+            <Addphoto checkAuth={checkAuth} setLoading={setLoading} setShowPopup={setShowPopup}>
               {
                 showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
               }

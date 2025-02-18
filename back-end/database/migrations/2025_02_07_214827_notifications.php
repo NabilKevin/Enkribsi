@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('title');
+            $table->string('slug')->unique();
+            $table->string('excerpt');
             $table->text('content');
             $table->boolean('is_read')->default(false);
 

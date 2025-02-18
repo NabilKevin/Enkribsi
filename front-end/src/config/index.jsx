@@ -1,4 +1,5 @@
 export const BASE_URL = 'http://localhost:8000'
+// export const BASE_URL = 'http://192.168.3.14:8000'
 export const BASE_URL_API = `${BASE_URL}/api`
 export const API_ENDPOINTS = {
   ME: '/me',
@@ -11,5 +12,8 @@ export const API_ENDPOINTS = {
   OFFICES: '/offices',
   CHECKLOCATION: '/checklocation',
   CHECKSCHEDULEWFAH: '/checkschedulewfah',
-  PULANG: '/leave'
+  PULANG: '/leave',
+  NOTIFICATIONS: '/notifications',
+  DELETENOTIF: '/notifications',
+  NOTIFICATIONCOUNT: '/notifications/count'
 }

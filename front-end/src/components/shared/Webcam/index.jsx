@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-const Webcam = ({imageSrc, canvasRef, videoRef, setWebcamStream, setImageSrc, webcamStream, handleSubmit, stopWebcam, isSubmitting}) => {
+const Webcam = ({imageSrc, canvasRef, videoRef, setWebcamStream, setImageSrc, webcamStream, handleSubmit, handleStopWebcam, isSubmitting}) => {
   
   const startWebcam = async () => {
     try {
@@ -48,7 +48,7 @@ const Webcam = ({imageSrc, canvasRef, videoRef, setWebcamStream, setImageSrc, we
                 <button className="btn btn-danger mx-2 my-2" onClick={startWebcam} disabled={webcamStream}>
                   Mulai Webcam
                 </button>
-                <button className="btn btn-danger mx-2 my-2" onClick={stopWebcam} disabled={!webcamStream}>
+                <button className="btn btn-danger mx-2 my-2" onClick={handleStopWebcam} disabled={!webcamStream}>
                   Hentikan Webcam
                 </button>
               </div>
