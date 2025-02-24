@@ -23,5 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 401);
         });
     })->withSchedule(function(Schedule $schedule){
-        $schedule->command('app:check-absent')->dailyAt('23:59');
+        $schedule->command('app:check-absent')->dailyAt('23:59')->weekdays();
+        $schedule->command('app:check-pulang')->dailyAt('23:59')->weekdays();
     })->create();

@@ -1,40 +1,60 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react"
 import { CardNotifications } from "@/components"
-import { getNotifications, deleteNotification } from "@/utils/api"
+import { getNotifications, deleteNotifications } from "@/utils/api"
 import { handleInPopup } from '@/utils/Popup';
 import { FloatingButton, Loading, Container, Row, Col } from "@/components";
+import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 
 const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, setIsLongClicked, children}) => {
-  const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fetch_data = async () => {
-    try {
-      setNotifications(await getNotifications({setShowPopup}))
-    } catch(e) {
-      handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-    } finally {
-      setLoading(false)
+  const handleErrorNotifications = e => {
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+  }
+
+  const handleErrorDeleteNotifications = e => {
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+  }
+
+  const handleSuccessDeleteNotifications = e => {
+    setLoading(true)
+    handleInPopup({title: 'Sukses!', content: e?.message, setShowPopup})
+    fetch_data()
+    setIsLongClicked(false)
+  }
+
+  const { data: notifications, execute: setNotifications } = useMultipleFetch({fetchs: [getNotifications], setLoading, 
+    errorCallbackMap: {
+        getNotifications: handleErrorNotifications,
     }
+  });
+
+  const { execute: setDeleteNotifications } = useMultipleFetch({fetchs: [deleteNotifications], 
+    errorCallbackMap: {
+        deleteNotifications: handleErrorDeleteNotifications,
+    },
+    successCallbackMap: {
+        deleteNotifications: handleSuccessDeleteNotifications
+    },
+  });
+
+  const fetch_data = async () => {
+    setNotifications()
   }
 
   const handleDeleteSelected = async e => {
     e.preventDefault();
     const slugs = [...e.target].map(el => {
       if(el.type.toLowerCase() === "checkbox" && el.checked) {
-        return parseInt(el.id)
+        return el.id
       }
     }).filter(el => el)
     
     if(slugs.length === 0) {
       handleInPopup({title: 'Peringatan!', content: 'Kamu harus menyeleksi minimal 1 notifikasi untuk dihapus!', setShowPopup})
     } else {
-      await deleteNotification({slugs, setShowPopup, callback: () => {
-        fetch_data()
-        setLoading(true)
-        setIsLongClicked(false)
-      }})
+      setDeleteNotifications(slugs)
     }
     
   }
@@ -53,12 +73,12 @@ const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, 
   return (
     <>
       {children}
-      <Container>
+      <Container size={'-fluid'} marginTop={5} marginBottom={5}>
         <Row>
           <Col size={'-md-8'}>
             <form onSubmit={handleDeleteSelected}>
             {
-              notifications.map((notification, i) => (<CardNotifications slug={notification?.slug} key={i} isLongClicked={isLongClicked} setIsLongClicked={setIsLongClicked} title={notification?.title} excerpt={notification?.excerpt + '...'} />))
+              notifications?.getNotifications?.map((notification, i) => (<CardNotifications slug={notification?.slug} key={i} isLongClicked={isLongClicked} setIsLongClicked={setIsLongClicked} title={notification?.title} excerpt={notification?.excerpt + '...'} />))
             }
             { isLongClicked && 
               <FloatingButton type={'submit'}>

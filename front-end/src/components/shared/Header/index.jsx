@@ -1,13 +1,23 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { getNotificationCount } from "@/utils/Api"
-import { useEffect, useState } from "react"
+import { getNotificationsCount } from "@/utils/Api"
+import { useEffect } from "react"
+import { useMultipleFetch } from '@/hooks/useMultipleFetch';
+import { handleInPopup } from '@/utils/Popup';
 
 /* eslint-disable react/prop-types */
 const Header = ({isHomepage, user, showNotificationButton, isLongClicked, setIsLongClicked, setShowPopup}) => {
-  const [notifCount, setNotifCount] = useState()
+  const handleErrorNotificationsCount = e => {
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+  }
+
+  const { data: notificationsCount, execute: setNotificationsCount } = useMultipleFetch({fetchs: [getNotificationsCount], 
+    errorCallbackMap: {
+        getNotificationsCount: handleErrorNotificationsCount,
+    }
+  });
 
   const fetch_data = async () => {
-    setNotifCount(await getNotificationCount({setShowPopup}));
+    setNotificationsCount();
   }
 
   const path = location.pathname.split('/')[1].toLowerCase()
@@ -51,7 +61,7 @@ const Header = ({isHomepage, user, showNotificationButton, isLongClicked, setIsL
                   <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2m.995-14.901a1 1 0 1 0-1.99 0A5 5 0 0 0 3 6c0 1.098-.5 6-2 7h14c-1.5-1-2-5.902-2-7 0-2.42-1.72-4.44-4.005-4.901"/>
                 </svg>
                 {
-                  notifCount && <span className="position-absolute top-0 notificationAlert translate-middle badge border border-light rounded-circle bg-danger"><span>{notifCount}</span></span> 
+                  notificationsCount?.getNotificationsCount > 0 && <span className="position-absolute top-0 notificationAlert translate-middle badge border border-light rounded-circle bg-danger"><span>{notificationsCount?.getNotificationsCount}</span></span> 
                 }
               </a>
             }

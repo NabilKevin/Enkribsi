@@ -133,14 +133,14 @@ class BodController extends Controller
         if($absent) {
             $absent->update([
                 'status' => $permit->permit_type === 'sakit' ? 'izin' : $permit->permit_type,
-                'check_out_time' => $permit->permit_type === 'sakit' || $permit->permit_type === 'izin' ? Carbon::now()->toTimeString() : null
+                'check_out_time' => in_array($permit->permit_type, ['izin', 'sakit']) ? Carbon::now()->toTimeString() : null
             ]);
         } else {
-            if(Carbon::parse($permit->date)->isToday()) {
+            if(Carbon::parse($permit->date)->isToday() && in_array($permit->permit_type, ['izin', 'sakit'])) {
                 Attendance::create([
                     'user_id' => $permit->user_id,
                     'date' => Carbon::now()->toDateString(),
-                    'status' => $permit->permit_type === 'sakit' ? 'izin' : $permit->permit_type
+                    'status' => 'izin'
                 ]);
             }
         }

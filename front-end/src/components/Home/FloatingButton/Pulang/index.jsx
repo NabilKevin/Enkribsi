@@ -3,7 +3,7 @@ import { useState } from "react"
 const FloatingButtonPulang = () => {
   const [isHover, setIsHover] = useState(false)
   return (
-    <button data-bs-toggle="modal" data-bs-target="#modalBox" onMouseEnter={() => setIsHover(true)} onMouseLeave={() => setIsHover(false)} className="float-button z-2 shadow text-decoration-none btn btn-danger">
+    <button data-bs-toggle="modal" data-bs-target="#modalBox" onMouseEnter={() => setIsHover(true)} onMouseLeave={() => setIsHover(false)} className="float-button z-2 shadow">
         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="white" className={`bi bi-door-${isHover ? 'open' : 'closed'}`} viewBox="0 0 16 16">
             {
                 isHover ? <>

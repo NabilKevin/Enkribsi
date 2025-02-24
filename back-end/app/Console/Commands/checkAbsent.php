@@ -35,7 +35,8 @@ class checkAbsent extends Command
             Attendance::create([
                 'status' => 'alfa',
                 'date' => Carbon::now()->toDateString(),
-                'user_id' => $user->id
+                'user_id' => $user->id,
+                'work_type' => null
             ]);
         }
 

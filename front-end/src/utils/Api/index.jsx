@@ -2,54 +2,48 @@ import axios from "axios";
 import { API_ENDPOINTS, BASE_URL_API } from "@/config";
 import { handleInPopup } from "@/utils/Popup";
 
-export const getPresences = async ({setShowPopup}) => {
-  let data = null;
-  try {
-    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.PRESENCES}`)
-    data = response.data?.data
-  } catch(e) {
-    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-  }
-
-  return data
+export const getPresencesCount = async () => {
+  const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.PRESENCESCOUNT}`)
+  return response.data?.data
+}
+export const getPresences = async () => {
+  const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.PRESENCES}`)
+  return response.data?.data
 }
 
-export const getAttendance = async ({setShowPopup}) => {
-    let data = null;
-  try {
-      const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.ATTENDANCE}`)
-      data = response.data?.data
-      
-  } catch(e) {
-      
-      if(e.status === 404) {
-          handleInPopup({title: 'Pengingat!', content: 'Kamu belum absen hari ini!', setShowPopup})
-      } 
-  }
-  return data
+export const getAttendance = async () => {
+  const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.ATTENDANCE}`)
+  return response.data?.data
 }
 
-export const pulang = async ({setShowPopup}) => {
-    let data = null
-    try {
-        const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.PULANG}`)
-        data = response.data?.data
-        handleInPopup({title: 'Sukses!', content: response.data?.message, setShowPopup})
-    } catch(e) {
-        handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-    }
-    return data
+export const pulang = async () => {
+  const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.PULANG}`)
+  return response.data
 }
 
-export const getOffices = async ({setShowPopup}) => {
-    let data = null
-    try {
-      const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.OFFICES}`)
-      data = response.data?.data
-    } catch(e) {
-        handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-    }
-    return data
+export const getNotifications = async () => {
+  const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.NOTIFICATIONS}`)
+  return response.data?.data
+}
+
+export const getOffices = async () => {
+  const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.OFFICES}`)
+  return response.data?.data
+}
+
+export const getNotification = async (slug) => {
+  const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.NOTIFICATIONS}/${slug}`)
+  return response.data?.data
+}
+
+export const deleteNotifications = async (slugs) => {
+  const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.DELETENOTIF}`, {slugs})
+  return response.data
+}
+
+export const getNotificationsCount = async () => {
+  const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.NOTIFICATIONCOUNT}`)
+  return response.data?.data
 }
 
 export const getLocation = ({setShowPopup, callback}) => {
@@ -131,49 +125,4 @@ export const handleSubmitAbsen = async ({e, setIsSubmitting, setShowPopup, callb
     setIsSubmitting(false)
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
-}
-
-export const getNotifications = async ({setShowPopup}) => {
-  let data = null;
-  try {
-    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.NOTIFICATIONS}`)
-    data = response.data?.data
-  } catch(e) {
-    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-  }
-
-  return data
-}
-
-export const deleteNotification = async ({slugs, setShowPopup, callback}) => {
-  try {
-    const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.DELETENOTIF}`, {slugs})
-    handleInPopup({title: 'Sukses!', content: response.data?.message, setShowPopup})
-    callback()
-  } catch(e) {
-    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-  }
-}
-
-export const getNotification = async ({setShowPopup, slug}) => {
-  let data = null;
-  try {
-    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.NOTIFICATIONS}/${slug}`)
-    data = response.data?.data
-  } catch(e) {
-    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-  }
-
-  return data
-}
-export const getNotificationCount = async ({setShowPopup}) => {
-  let data = null;
-  try {
-    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.NOTIFICATIONCOUNT}`)
-    data = response.data?.data
-  } catch(e) {
-    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-  }
-
-  return data
 }

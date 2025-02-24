@@ -1,12 +1,12 @@
 /* eslint-disable react/prop-types */
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { BASE_URL_API, API_ENDPOINTS } from '@/config'
 import { StatsCard, StatsTable, Loading, Piechart, Container, Col, Row } from '@/components/'
+import { getPresencesCount, getPresences } from '@/utils/Api';
+import { handleInPopup } from '@/utils/Popup';
+import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 
-function Statistics({setShowNotificationButton}) {
-  const [statistics, setStatistics] = useState();
+function Statistics({setShowNotificationButton, setShowPopup}) {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState({
     hadir: false,
@@ -14,7 +14,7 @@ function Statistics({setShowNotificationButton}) {
     telat: false,
     alfa: false
   });
-  const [presence, setPresence] = useState({presence: '', data: []})
+  const [presence, setPresence] = useState('')
   const list = {
     hadir: [
       {
@@ -65,29 +65,37 @@ function Statistics({setShowNotificationButton}) {
       }
     ],
   }
-  const getPresences = async () => {
-    try {
-        const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.PRESENCES}`)
-        const data = response.data?.data
-        setStatistics(data)
-    } finally {
-      setLoading(false)
-    }
+  const handleErrorPresences = e => {
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
-  const getPresence = async (type) => {
+  const handleErrorPresencesCount = e => {
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+  }
+  const { data: presencesCount, execute: setPresencesCount } = useMultipleFetch({fetchs: [getPresencesCount], setLoading, 
+    errorCallbackMap: {
+        getPresencesCount: handleErrorPresencesCount,
+    }
+  });
+  const { data: presences, execute: setPresences } = useMultipleFetch({fetchs: [getPresences], setLoading, 
+    errorCallbackMap: {
+        getPresencesCount: handleErrorPresences,
+    }
+  });
+
+  const fetch_data = async () => {
+    setPresencesCount()
+    setPresences()
+  }
+  const getHadir = async (type) => {
     setIsOpen({
       hadir: false,
       izin: false,
       telat: false,
       alfa: false
     })
-    try {
-        const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.PRESENCE}?presence=${type}`)
-        const data = response.data?.data
-        setPresence({presence: type, data})
-    } catch {
-      setPresence({presence: '', data: []})
-    } finally {
+
+    const setPresenceIsOpen = () => {
+      setPresence(type)
       if(type !== '') {
         setIsOpen(prev => ({
           ...prev,
@@ -95,46 +103,54 @@ function Statistics({setShowNotificationButton}) {
         }))
       }
     }
+
+    if(presence === '') {
+      setPresenceIsOpen()
+    } else {
+      setTimeout(() => {
+        setPresenceIsOpen()
+      }, 500)
+    }
   }
 
   useEffect(() => {
     setShowNotificationButton(true)
-    getPresences()
+    fetch_data()
     import('@/css/statistics/index.css')
   }, [])
-
+  
   return (
     <>
     {loading && <Loading />}
     {
       !loading && 
-      <Container size={'-fluid'}>
+      <Container size={'-fluid'} marginTop={5} marginBottom={5}>
         <Row>
           <Col size={'-md-6'} addClass={"offset-md-3"}>
             <div>
                 <div>
                   {
-                    statistics ? Object.values(statistics).every(value => value === 0) ? <h1 className='text-center'>Kamu belum pernah absen!</h1> : 
+                    presencesCount?.getPresencesCount ? Object.values(presencesCount?.getPresencesCount).every(value => value === 0) ? <h1 className='text-center'>Kamu belum pernah absen!</h1> : 
                     <>
                       <div className='d-flex justify-content-center'>
-                        <Piechart statistics={statistics} />
+                        <Piechart statistics={presencesCount?.getPresencesCount} />
                       </div>
                       <div className="mt-4">
-                        <StatsCard presence={presence} type={'hadir'} getPresence={getPresence} />
-                        {presence.presence === 'hadir' &&
-                          <StatsTable isOpen={isOpen.hadir} presence={presence} type={'hadir'} list={list} />
+                        <StatsCard presence={presence} type={'hadir'} getHadir={getHadir} />
+                        {presence === 'hadir' &&
+                          <StatsTable isOpen={isOpen.hadir} data={presences?.getPresences?.[presence]} type={presence} list={list} />
                         }
-                        <StatsCard presence={presence} type={'izin'} getPresence={getPresence} />
-                        {presence.presence === 'izin' &&
-                          <StatsTable isOpen={isOpen.izin} presence={presence} type={'izin'} list={list} />
+                        <StatsCard presence={presence} type={'izin'} getHadir={getHadir} />
+                        {presence === 'izin' &&
+                          <StatsTable isOpen={isOpen.izin} data={presences?.getPresences?.[presence]} type={presence} list={list} />
                         }
-                        <StatsCard presence={presence} type={'telat'} getPresence={getPresence} />
-                        {presence.presence === 'telat' &&
-                          <StatsTable isOpen={isOpen.telat} presence={presence} type={'telat'} list={list} />
+                        <StatsCard presence={presence} type={'telat'} getHadir={getHadir} />
+                        {presence === 'telat' &&
+                          <StatsTable isOpen={isOpen.telat} data={presences?.getPresences?.[presence]} type={presence} list={list} />
                         }
-                        <StatsCard presence={presence} type={'alfa'} getPresence={getPresence} />
-                        {presence.presence === 'alfa' &&
-                          <StatsTable isOpen={isOpen.alfa} presence={presence} type={'alfa'} list={list} />
+                        <StatsCard presence={presence} type={'alfa'} getHadir={getHadir} />
+                        {presence === 'alfa' &&
+                          <StatsTable isOpen={isOpen.alfa} data={presences?.getPresences?.[presence]} type={presence} list={list} />
                         }
                       </div>
                     </>

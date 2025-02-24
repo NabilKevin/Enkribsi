@@ -17,6 +17,7 @@ use App\Http\Controllers\HrController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Middleware\jwtMiddleware;
+use App\Http\Middleware\isNotAdmin;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -77,25 +78,27 @@ Route::middleware(jwtMiddleware::class)->group(function () {
         Route::get('/statistics', [BodController::class, 'getStatistics']);
     });
 
+    Route::middleware(isNotAdmin::class)->group(function() {
+        Route::post('/checklocation', [AbsenController::class, 'checkLocation'] );
+        Route::post('/checkschedulewfah', [AbsenController::class, 'checkScheduleWfah']);
+        Route::post('/absent', [AbsenController::class, 'absent']);
+        Route::post('/permit', [AbsenController::class, 'storePermit']);
+        Route::post('/permit/cancel/{id}', [AbsenController::class, 'cancelPermit']);
+        Route::post('/leave', [AbsenController::class, 'leave']);
+        Route::get('/presences/count', [AbsenController::class, 'getPresencesCount']);
+        Route::get('/presences', [AbsenController::class, 'getPresences']);
+        Route::get('/attendance', [AbsenController::class, 'getAttendance']);
+        Route::get('/permits', [AbsenController::class, 'getPermits']);
+        Route::get('/offices', [AbsenController::class, 'getOffices']);
+
+        Route::post('/addphoto', [UserController::class, 'addPhotoProfile']);
+        Route::get('/me', [UserController::class, 'me']);
+
+        Route::get('/notifications/count', [NotificationController::class, 'getNotificationsCount']);
+        Route::get('/notifications', [NotificationController::class, 'getNotifications']);
+        Route::get('/notifications/{slug}', [NotificationController::class, 'getNotification']);
+        Route::post('/notifications', [NotificationController::class, 'deleteNotifications']);
+    });
+
     Route::post('/auth/logout', [AuthController::class, 'logout']);
-
-    Route::post('/checklocation', [AbsenController::class, 'checkLocation']);
-    Route::post('/checkschedulewfah', [AbsenController::class, 'checkScheduleWfah']);
-    Route::post('/absent', [AbsenController::class, 'absent']);
-    Route::post('/permit', [AbsenController::class, 'storePermit']);
-    Route::post('/permit/cancel/{id}', [AbsenController::class, 'cancelPermit']);
-    Route::post('/leave', [AbsenController::class, 'leave']);
-    Route::get('/presences', [AbsenController::class, 'getPresences']);
-    Route::get('/presence', [AbsenController::class, 'getPresence']);
-    Route::get('/attendance', [AbsenController::class, 'getAttendance']);
-    Route::get('/permits', [AbsenController::class, 'getPermits']);
-    Route::get('/offices', [AbsenController::class, 'getOffices']);
-
-    Route::post('/addphoto', [UserController::class, 'addPhotoProfile']);
-    Route::get('/me', [UserController::class, 'me']);
-
-    Route::get('/notifications/count', [NotificationController::class, 'getNotificationsCount']);
-    Route::get('/notifications', [NotificationController::class, 'getNotifications']);
-    Route::get('/notifications/{slug}', [NotificationController::class, 'getNotification']);
-    Route::post('/notifications', [NotificationController::class, 'deleteNotifications']);
 });

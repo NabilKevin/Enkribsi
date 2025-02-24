@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react"
 import { Webcam, FormAbsen } from "@/components";
 import { handleInPopup } from '@/utils/Popup';
 import { checkPermission } from '@/utils/Permission';
-import { getOffices, getLocation, checkLocation, handleSubmitAbsen } from '@/utils/Api';
+import { getOffices, getLocation, checkLocation, handleSubmitAbsen, getAttendance } from '@/utils/Api';
 import { stopWebcam } from '@/utils/Webcam';
 import { Loading, Container } from "@/components";
+import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 
 const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   const [webcamStream, setWebcamStream] = useState(null);
@@ -14,7 +15,6 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   const [page, setPage] = useState(1)
   const [grant, setGrant] = useState({location: false, webcam: false});
   const [loading, setLoading] = useState(true)
-  const [offices, setOffices] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [data, setData] = useState({
     work_type: '',
@@ -69,18 +69,31 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
     stopWebcam({webcamStream, setWebcamStream})
   }
 
+  const handleErrorOffices = e => {
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+  }
+
+  const { data: offices, execute: setOffices } = useMultipleFetch({fetchs: [getOffices], setLoading, 
+    errorCallbackMap: {
+        getOffices: handleErrorOffices,
+    }
+  });
+
   const fetch_data = async () => {
     checkAllPermission()
-    try {
-      setOffices(await getOffices({setShowPopup}))
-    } catch(e) {
-      handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-    } finally {
-      setLoading(false)
+    setOffices()
+  }
+
+  const isAbsen = async () => {
+    const data = await getAttendance()
+    
+    if(data) {
+      location.replace('/')
     }
   }
 
   useEffect(() => {
+    isAbsen()
     fetch_data()
     setShowNotificationButton(false)
   }, [])
@@ -102,8 +115,8 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
       {loading ? <Loading /> :
         <>
         {children}
-        <Container>
-          { page === 1 ? <FormAbsen grant={grant} offices={offices} handleCheckLocation={handleCheckLocation} /> : <Webcam isSubmitting={isSubmitting} imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} handleStopWebcam={handleStopWebcam} />}
+        <Container size={'-lg'} marginTop={5}>
+          { page === 1 ? <FormAbsen grant={grant} offices={offices?.getOffices} handleCheckLocation={handleCheckLocation} /> : <Webcam isSubmitting={isSubmitting} imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} handleStopWebcam={handleStopWebcam} />}
         </Container>
         </>
       } 

@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
-const Card = ({presence, type, getPresence}) => {
+const Card = ({presence, type, getHadir}) => {
   return (
-    <div className={`card p-2 pointer ${presence.presence === type ? "rounded-bottom-0" : 'mb-3'}`} onClick={() => getPresence(presence.presence === type ? '' : type)}>
+    <div className={`card p-2 pointer ${presence === type ? "rounded-bottom-0" : 'mb-3'}`} onClick={() => getHadir(presence === type ? '' : type)}>
       <div className="card-body d-flex align-items-center justify-content-between">
         <div className="d-flex align-items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" className="bi bi-file-earmark-text" viewBox="0 0 16 16">
@@ -14,7 +14,7 @@ const Card = ({presence, type, getPresence}) => {
           </h5>
         </div>
         {
-          presence.presence === type ? 
+          presence === type ? 
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-chevron-down" viewBox="0 0 16 16">
             <path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708"/>
           </svg> 

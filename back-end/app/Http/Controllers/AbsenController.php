@@ -359,12 +359,12 @@ class AbsenController extends Controller
 
         return response()->json([
             'status' => 'successful',
-            'message' => 'Success leave',
+            'message' => 'Selamat beristirahat',
             'data' => $attendance
         ], 200);
     }
 
-    public function getPresences(Request $request)
+    public function getPresencesCount(Request $request)
     {
         $absent = Attendance::where('user_id', $request->user()->id)->whereNotIn('status', ['izin', 'alfa'])->where('work_type', '!=', null)->get();
         $permit = Permit::where('user_id', $request->user()->id)->where('date', '<=', Carbon::now()->toDateString())->get();
@@ -390,52 +390,35 @@ class AbsenController extends Controller
         ], 200);
     }
 
-    public function getPresence(Request $request)
+    public function getPresences(Request $request)
     {
-        $presence = $request->query('presence');
-        if($presence === 'hadir') {
-            $absent = Attendance::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('work_type', '!=', null)->whereNotIn('status', ['izin', 'alfa'])->limit(50)->get();
-            return response()->json([
-                'status' => 'successful',
-                'message' => 'Success get presence',
-                'data' => $absent->sortBy('date', SORT_NATURAL, false)->values()
-            ], 200);
-        } elseif($presence === 'izin') {
-            $permit = Permit::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('status', 'approved')->where('date', '<=', Carbon::now()->toDateString())->get();
-            return response()->json([
-                'status' => 'successful',
-                'message' => 'Success get presence',
-                'data' => $permit->sortBy('date', SORT_NATURAL, false)->values()
-            ], 200);
-        } elseif($presence === 'alfa') {
-            $alfa = Attendance::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('status', 'alfa')->get();
-            return response()->json([
-                'status' => 'successful',
-                'message' => 'Success get presence',
-                'data' => $alfa->sortBy('date', SORT_NATURAL, false)->values()
-            ], 200);
-        } elseif($presence === 'telat') {
-            $telat = Attendance::with(['office.schedules'])->orderBy('date', 'desc')->where('user_id', $request->user()->id)->whereNotIn('status',['izin', 'alfa'])->where('work_type', '!=', null)->get();
-            $telat = $telat->map(function($value) {
-                $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->check_in_time);
-                $time2 = Carbon::parse($value->check_in_time);
-                if($time2->gt($time)) {
-                    $value['check_in_time_schedule'] = $time->toTimeString();
-                    $value->makeHidden(['office']);
-                    return $value;
-                }
-            })->filter();
-            return response()->json([
-                'status' => 'successful',
-                'message' => 'Success get presence',
-                'data' => $telat->sortBy('date', SORT_NATURAL, false)->values()
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Invalid presence'
-            ], 422);
-        }
+        $absent = Attendance::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('work_type', '!=', null)->whereNotIn('status', ['izin', 'alfa'])->limit(50)->get();
+
+        $permit = Permit::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('status', 'approved')->where('date', '<=', Carbon::now()->toDateString())->get();
+
+        $alfa = Attendance::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('status', 'alfa')->get();
+
+        $telat = Attendance::with(['office.schedules'])->orderBy('date', 'desc')->where('user_id', $request->user()->id)->whereNotIn('status',['izin', 'alfa'])->where('work_type', '!=', null)->get();
+        $telat = $telat->map(function($value) {
+            $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->check_in_time);
+            $time2 = Carbon::parse($value->check_in_time);
+            if($time2->gt($time)) {
+                $value['check_in_time_schedule'] = $time->toTimeString();
+                $value->makeHidden(['office']);
+                return $value;
+            }
+        })->filter();
+
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Success get presences',
+            'data' => [
+                'hadir' => $absent->sortBy('date', SORT_NATURAL, false)->values(),
+                'izin' => $permit->sortBy('date', SORT_NATURAL, false)->values(),
+                'alfa' => $alfa->sortBy('date', SORT_NATURAL, false)->values(),
+                'telat' => $telat->sortBy('date', SORT_NATURAL, false)->values(),
+            ]
+        ], 200);
     }
 
     public function getAttendance(Request $request)

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 /* eslint-disable react/prop-types */
-const Table = ({presence, type, list, isOpen}) => {
+const Table = ({data, type, list, isOpen}) => {
   const tableRef = useRef(null);
   const [contentHeight, setContentHeight] = useState('0px'); // State untuk menyimpan tinggi konten
   const [contentPadding, setContentPadding] = useState('0px'); // State untuk menyimpan tinggi konten
@@ -23,7 +23,7 @@ const Table = ({presence, type, list, isOpen}) => {
   }, [isOpen]);
   return (
     <div className={`card mb-3 px-4 rounded-top-0 border-top-0 muncul`} ref={tableRef} style={{ maxHeight: contentHeight, padding: contentPadding }}>
-      {presence.data.length > 0 ? <table className="table">
+      {data && data.length > 0 ? <table className="table">
         <thead>
           <tr>
             <th scope="col">#</th>
@@ -35,7 +35,7 @@ const Table = ({presence, type, list, isOpen}) => {
         </thead>
         <tbody className="table-group-divider">
           {
-            presence.data.map((p, i) => (
+            data.map((p, i) => (
               <tr key={i+1}>
                 <th scope="row">{i+1}</th>
                 {
