@@ -14,7 +14,11 @@ class AnnouncementController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Announcements successfully gotten',
+            'data' => Announcement::all()
+        ], 200);
     }
 
     /**
@@ -59,8 +63,15 @@ class AnnouncementController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Announcement $announcement)
+    public function update(Request $request, $id)
     {
+        $announcement = Announcement::find($id);
+        if(!$announcement) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement not found'
+            ], 404);
+        }
         $validator = Validator::make($request->all(), [
             'target_audience' => 'integer|exists:divisions,id',
             'status' => 'prohibited'
@@ -87,8 +98,15 @@ class AnnouncementController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Announcement $announcement)
+    public function destroy($id)
     {
+        $announcement = Announcement::find($id);
+        if(!$announcement) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement not found'
+            ], 404);
+        }
         $announcement->delete();
         return response()->json([
             'status' => 'successful',

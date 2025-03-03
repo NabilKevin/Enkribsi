@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { getNotification } from "@/utils/Api"
+import UserService from "@/services/UserService"
 import { handleInPopup } from "@/utils/Popup"
 import { Loading, Card, Container } from "@/components"
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
@@ -15,7 +15,7 @@ const Notification = ({setShowPopup}) => {
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
 
-  const { data: notification, execute: setNotification } = useMultipleFetch({fetchs: [getNotification], setLoading, 
+  const { data: notification, execute: setNotification } = useMultipleFetch({fetchs: [UserService.getNotification], setLoading, 
     errorCallbackMap: {
         getNotification: handleErrorNotification,
     }
@@ -27,7 +27,7 @@ const Notification = ({setShowPopup}) => {
 
   useEffect(() => {
     fetch_data()
-    import('@/css/notification/index.css')
+    import('@/css/user/notification/index.css')
   }, [])
 
   if(loading) {

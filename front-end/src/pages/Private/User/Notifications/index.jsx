@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from "react"
-import { CardNotifications } from "@/components"
-import { getNotifications, deleteNotifications } from "@/utils/api"
-import { handleInPopup } from '@/utils/Popup';
 import { FloatingButton, Loading, Container, Row, Col } from "@/components";
+import UserService from "@/services/UserService"
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
+import { Card } from "@/components/User/Notifications"
+import { handleInPopup } from '@/utils/Popup';
+import { useEffect, useState } from "react"
 
 const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, setIsLongClicked, children}) => {
   const [loading, setLoading] = useState(true)
@@ -24,13 +24,13 @@ const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, 
     setIsLongClicked(false)
   }
 
-  const { data: notifications, execute: setNotifications } = useMultipleFetch({fetchs: [getNotifications], setLoading, 
+  const { data: notifications, execute: setNotifications } = useMultipleFetch({fetchs: [UserService.getNotifications], setLoading, 
     errorCallbackMap: {
         getNotifications: handleErrorNotifications,
     }
   });
 
-  const { execute: setDeleteNotifications } = useMultipleFetch({fetchs: [deleteNotifications], 
+  const { execute: setDeleteNotifications } = useMultipleFetch({fetchs: [UserService.deleteNotifications], 
     errorCallbackMap: {
         deleteNotifications: handleErrorDeleteNotifications,
     },
@@ -61,7 +61,7 @@ const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, 
 
   useEffect(() => {
     setShowNotificationButton(false)
-    import('@/css/notifications/index.css')
+    import('@/css/user/notifications/index.css')
     fetch_data()
   }, [])
 
@@ -78,7 +78,10 @@ const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, 
           <Col size={'-md-8'}>
             <form onSubmit={handleDeleteSelected}>
             {
-              notifications?.getNotifications?.map((notification, i) => (<CardNotifications slug={notification?.slug} key={i} isLongClicked={isLongClicked} setIsLongClicked={setIsLongClicked} title={notification?.title} excerpt={notification?.excerpt + '...'} />))
+              notifications?.getNotifications && notifications?.getNotifications?.length > 0 ? 
+                notifications?.getNotifications?.map((notification, i) => (<Card slug={notification?.slug} key={i} isLongClicked={isLongClicked} setIsLongClicked={setIsLongClicked} title={notification?.title} excerpt={notification?.excerpt + '...'} />))
+              :
+                <h1 className="text-center">Anda tidak memiliki notifikasi</h1>
             }
             { isLongClicked && 
               <FloatingButton type={'submit'}>

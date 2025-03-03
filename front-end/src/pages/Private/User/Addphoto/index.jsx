@@ -1,9 +1,10 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react"
-import { Webcam, DescriptionAddphoto } from "@/components/";
 import { checkPermission } from '@/utils/Permission';
+import { Description } from "@/components/User/Addphoto";
 import { stopWebcam } from '@/utils/Webcam';
-import { handleSubmitAddphoto } from '@/utils/Api';
+import { Webcam } from "@/components/";
+import UserService from '@/services/UserService';
 
 const Addphoto = ({checkAuth, setLoading, setShowPopup, children}) => {
   const [page, setPage] = useState(1) 
@@ -26,7 +27,7 @@ const Addphoto = ({checkAuth, setLoading, setShowPopup, children}) => {
   };
 
   const handleSubmit = async () => {
-    await handleSubmitAddphoto({setIsSubmitting, setShowPopup, imageSrc, callback: () => {
+    await UserService.handleSubmitAddphoto({setIsSubmitting, setShowPopup, imageSrc, callback: () => {
       handleStopWebcam()
       checkAuth()
       location.replace('/')
@@ -42,7 +43,7 @@ const Addphoto = ({checkAuth, setLoading, setShowPopup, children}) => {
     <>
     {children}
     {
-      page === 1 ? <DescriptionAddphoto granted={granted} setPage={setPage} /> : <Webcam imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} isSubmitting={isSubmitting} handleStopWebcam={handleStopWebcam} />
+      page === 1 ? <Description granted={granted} setPage={setPage} /> : <Webcam imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} isSubmitting={isSubmitting} handleStopWebcam={handleStopWebcam} />
     }
     </>
   )

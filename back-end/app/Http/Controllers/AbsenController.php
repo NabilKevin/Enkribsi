@@ -8,9 +8,9 @@ use App\Models\Office;
 use App\Models\Permit;
 use App\Models\Division;
 use App\Models\Attendance;
+use App\Models\Schedule;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\WfaWfhSchedule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -76,7 +76,7 @@ class AbsenController extends Controller
             ], 422);
         }
         $now = Carbon::now()->toDateString();
-        $schedule = WfaWfhSchedule::where('office_id', $request->office)->where('start_date', '>=', $now)->where('end_date', '<=', $now)->firstWhere('status', 'active');
+        $schedule = Schedule::where('office_id', $request->office)->where('work_type', '!=', 'wfo')->where('start_date', '>=', $now)->where('end_date', '<=', $now)->firstWhere('status', 'active');
         $permit = Permit::whereIn('permit_type', ['wfa', 'wfh'])->firstWhere('date',$now);
         if($schedule || $permit) {
             if($request->work_type === 'wfh') {
@@ -172,7 +172,7 @@ class AbsenController extends Controller
 
         if(in_array($request->work_type, ['wfa', 'wfh'])) {
             $now = Carbon::now()->toDateString();
-            $schedule = WfaWfhSchedule::where('office_id', $request->office)->where('start_date', '>=', $now)->where('end_date', '<=', $now)->firstWhere('status', 'active');
+            $schedule = Schedule::where('office_id', $request->office)->where('work_type', '!=', 'wfo')->where('start_date', '>=', $now)->where('end_date', '<=', $now)->firstWhere('status', 'active');
             if((!$permit || ($permit && in_array($permit->permit_type, ['izin', 'sakit']))) && !$schedule) {
                 return response()->json([
                     'status' => 'unsuccessful',
@@ -258,7 +258,7 @@ class AbsenController extends Controller
             'reason' => 'required|string',
             'permit_type' => 'required|string',
             'date' => 'date|required',
-            'office_id' => 'required|int|exists:offices,id',
+            'office_id' => 'required_if:permit_type,wfh,wfa|int|exists:offices,id',
         ]);
 
         if($validator->fails()) {
@@ -321,7 +321,7 @@ class AbsenController extends Controller
             'permit_type' => $data['permit_type'],
             'leader_id' => $request->user()->leader_id,
             'date' => $data['date'],
-            'office_id' => $data['office_id']
+            'office_id' => isset($data['office_id']) ? $data['office_id'] : null
         ]);
 
         return response()->json([

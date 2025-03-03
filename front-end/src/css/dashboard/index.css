@@ -1,0 +1,15 @@
+.dashboard-layout {
+  margin-left: 250px;
+  padding: 1rem;
+}
+@media screen and (min-width: 567px) and (max-width: 750px) {
+  .dashboard-layout {
+    margin-left: 35vw;
+  }
+}
+@media screen and (max-width: 567px) {
+  .dashboard-layout {
+    margin-left: 0px;
+    margin-top: 75px !important;
+  }
+}

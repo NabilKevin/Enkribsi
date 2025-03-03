@@ -1,6 +1,6 @@
 @keyframes slideInPopUP {
   0% {
-    top: -300px;
+    top: -100%;
   }
 
   100% {
@@ -13,7 +13,7 @@
   }
 
   100% {
-    top: -300px;
+    top: -100%;
   }
 }
 

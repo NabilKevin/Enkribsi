@@ -27,7 +27,7 @@ class checkPulang extends Command
      */
     public function handle()
     {
-        $absents = Attendance::where('date', Carbon::now()->toDateString())->get;
+        $absents = Attendance::where('date', Carbon::now()->toDateString())->where('status', 'absen')->get();
         foreach($absents as $absent) {
             $absent->update([
                 'status' => 'pulang',

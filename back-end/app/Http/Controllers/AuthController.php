@@ -41,10 +41,11 @@ class AuthController extends Controller
             $payload = JWTFactory::customClaims($customClaims)->make();
 
             $token = JWTAuth::encode($payload);
+
             return response()->json([
                 'status' => 'successful',
                 'message' => 'Login successfully'
-            ])->withCookie(
+            ], 200)->withCookie(
                 'jwt_token', // Nama cookie
                 $token, // Token JWT
                 $ttl, // Durasi (menit)
@@ -53,13 +54,12 @@ class AuthController extends Controller
                 env('APP_ENV') === 'production', // Secure (true jika HTTPS)
                 true, // HttpOnly
                 false // SameSite = None
-                );
-        } else {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Email or password is incorrect'
-            ], 401);
+            );
         }
+        return response()->json([
+            'status' => 'unsuccessful',
+            'message' => 'Email or password is incorrect'
+        ], 401);
     }
 
     public function logout(Request $request)

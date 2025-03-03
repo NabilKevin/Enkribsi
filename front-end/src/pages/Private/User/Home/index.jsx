@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
+import { Loading, Row, Card, FloatingButton, ModalBox, Container } from '@/components';
+import { FloatingButtonPulang, ColHome } from '@/components/User/Home';
 import { useEffect, useState } from 'react';
-import { Loading, Row, Card, ColHome, FloatingButton, ModalBox, FloatingButtonPulangHome, Container } from '@/components';
-import { handleInPopup } from '@/utils/Popup';
-import { getPresencesCount, getAttendance, pulang } from '@/utils/Api';
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
-
+import { handleInPopup } from '@/utils/Popup';
+import UserService from '@/services/UserService';
 
 const Home = ({setShowNotificationButton, setShowPopup, children, setIsHomepage}) => {
     const [loading, setLoading] = useState(true)
@@ -24,14 +24,14 @@ const Home = ({setShowNotificationButton, setShowPopup, children, setIsHomepage}
         handleInPopup({title: 'Sukses!', content: e?.message, setShowPopup})
     }
 
-    const { data, execute } = useMultipleFetch({fetchs: [getPresencesCount, getAttendance], setLoading, 
+    const { data, execute } = useMultipleFetch({fetchs: [UserService.getPresencesCount, UserService.getAttendance], setLoading, 
         errorCallbackMap: {
             getPresencesCount: handleErrorPresencesCount,
             getAttendance: handleErrorAttendance
         }
     });
 
-    const { data: pulangData, execute: handlePulang } = useMultipleFetch({fetchs: [pulang], setLoading,
+    const { data: pulangData, execute: handlePulang } = useMultipleFetch({fetchs: [UserService.pulang], setLoading,
         errorCallbackMap: {
             pulang: handleErrorPulang
         },
@@ -45,7 +45,7 @@ const Home = ({setShowNotificationButton, setShowPopup, children, setIsHomepage}
     }
 
     useEffect(() => {
-        import('@/css/home/index.css');
+        import('@/css/user/home/index.css');
         setIsHomepage(true)
         setShowNotificationButton(true)
         fetch_data()
@@ -104,7 +104,7 @@ const Home = ({setShowNotificationButton, setShowPopup, children, setIsHomepage}
                 </Row>
             </Container>
             {data?.getAttendance && !data?.getAttendance.check_out_time && 
-            <FloatingButtonPulangHome />
+            <FloatingButtonPulang />
             }
             {!data?.getAttendance && 
             <FloatingButton callback={() => location.replace('/absen')}>
@@ -114,7 +114,7 @@ const Home = ({setShowNotificationButton, setShowPopup, children, setIsHomepage}
                 </svg>
             </FloatingButton>
             }
-        <ModalBox title={'Konfirmasi pulang'} handlePulang={handlePulang}>
+        <ModalBox title={'Konfirmasi pulang'} callback={handlePulang}>
             <span className='fs-5'>Kamu yakin ingin pulang?</span>
         </ModalBox>
         </>

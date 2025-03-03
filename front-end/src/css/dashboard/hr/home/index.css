@@ -1,0 +1,22 @@
+.card {
+  background-color: #212529;
+  color: white;
+  border: none;
+}
+.table {
+  background-color: transparent;
+}
+.btn-status {
+  opacity: 1 !important;
+  min-width: 100px;
+}
+.btn-canceled {
+  background-color: #495057 !important;
+  border: none;
+}
+
+@media screen and (max-width: 567px) {
+  table * {
+    font-size: .9rem !important;
+  }
+}

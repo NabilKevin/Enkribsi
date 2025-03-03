@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { Loading, Piechart, Container, Col, Row } from '@/components/'
+import UserService from '@/services/UserService';
 import { useEffect, useState } from 'react';
-import { StatsCard, StatsTable, Loading, Piechart, Container, Col, Row } from '@/components/'
-import { getPresencesCount, getPresences } from '@/utils/Api';
-import { handleInPopup } from '@/utils/Popup';
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
+import { handleInPopup } from '@/utils/Popup';
+import { Card, Table } from '@/components/User/Statistics'
 
 function Statistics({setShowNotificationButton, setShowPopup}) {
   const [loading, setLoading] = useState(true);
@@ -71,12 +71,12 @@ function Statistics({setShowNotificationButton, setShowPopup}) {
   const handleErrorPresencesCount = e => {
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
-  const { data: presencesCount, execute: setPresencesCount } = useMultipleFetch({fetchs: [getPresencesCount], setLoading, 
+  const { data: presencesCount, execute: setPresencesCount } = useMultipleFetch({fetchs: [UserService.getPresencesCount], setLoading, 
     errorCallbackMap: {
         getPresencesCount: handleErrorPresencesCount,
     }
   });
-  const { data: presences, execute: setPresences } = useMultipleFetch({fetchs: [getPresences], setLoading, 
+  const { data: presences, execute: setPresences } = useMultipleFetch({fetchs: [UserService.getPresences], setLoading, 
     errorCallbackMap: {
         getPresencesCount: handleErrorPresences,
     }
@@ -116,7 +116,7 @@ function Statistics({setShowNotificationButton, setShowPopup}) {
   useEffect(() => {
     setShowNotificationButton(true)
     fetch_data()
-    import('@/css/statistics/index.css')
+    import('@/css/user/statistics/index.css')
   }, [])
   
   return (
@@ -136,21 +136,21 @@ function Statistics({setShowNotificationButton, setShowPopup}) {
                         <Piechart statistics={presencesCount?.getPresencesCount} />
                       </div>
                       <div className="mt-4">
-                        <StatsCard presence={presence} type={'hadir'} getHadir={getHadir} />
+                        <Card presence={presence} type={'hadir'} getHadir={getHadir} />
                         {presence === 'hadir' &&
-                          <StatsTable isOpen={isOpen.hadir} data={presences?.getPresences?.[presence]} type={presence} list={list} />
+                          <Table isOpen={isOpen.hadir} data={presences?.getPresences?.[presence]} type={presence} list={list} />
                         }
-                        <StatsCard presence={presence} type={'izin'} getHadir={getHadir} />
+                        <Card presence={presence} type={'izin'} getHadir={getHadir} />
                         {presence === 'izin' &&
-                          <StatsTable isOpen={isOpen.izin} data={presences?.getPresences?.[presence]} type={presence} list={list} />
+                          <Table isOpen={isOpen.izin} data={presences?.getPresences?.[presence]} type={presence} list={list} />
                         }
-                        <StatsCard presence={presence} type={'telat'} getHadir={getHadir} />
+                        <Card presence={presence} type={'telat'} getHadir={getHadir} />
                         {presence === 'telat' &&
-                          <StatsTable isOpen={isOpen.telat} data={presences?.getPresences?.[presence]} type={presence} list={list} />
+                          <Table isOpen={isOpen.telat} data={presences?.getPresences?.[presence]} type={presence} list={list} />
                         }
-                        <StatsCard presence={presence} type={'alfa'} getHadir={getHadir} />
+                        <Card presence={presence} type={'alfa'} getHadir={getHadir} />
                         {presence === 'alfa' &&
-                          <StatsTable isOpen={isOpen.alfa} data={presences?.getPresences?.[presence]} type={presence} list={list} />
+                          <Table isOpen={isOpen.alfa} data={presences?.getPresences?.[presence]} type={presence} list={list} />
                         }
                       </div>
                     </>

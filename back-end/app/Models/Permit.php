@@ -16,4 +16,8 @@ class Permit extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
+    public function leader()
+    {
+        return $this->belongsTo(Division::class, 'leader_id', 'id');
+    }
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 export const useMultipleFetch = ({fetchs, successCallbackMap = {}, errorCallbackMap = {}, setLoading}) => {
   const [data, setData] = useState({});
-
+  
   const execute = async (...args) => {
     if(setLoading) {
       setLoading(true);

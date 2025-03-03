@@ -14,7 +14,11 @@ class ScheduleController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Schedules successfully gotten',
+            'data' => Schedule::with('office')->get()
+        ], 200);
     }
 
     /**
@@ -27,6 +31,7 @@ class ScheduleController extends Controller
             'check_in_time' => 'date_format:H:i:s|required',
             'check_out_time' => 'date_format:H:i:s|required',
             'expired_date' => 'date_format:H:i:s',
+            'work_type' => 'required|in:wfa,wfo,wfh',
             'status' => 'prohibited'
         ]);
 
@@ -60,13 +65,21 @@ class ScheduleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Schedule $schedule)
+    public function update(Request $request, $id)
     {
+        $schedule = Schedule::find($id);
+        if(!$schedule) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Schedule not found'
+            ], 404);
+        }
         $validator = Validator::make($request->all(), [
             'office_id' => 'exists:offices,id',
             'check_in_time' => 'date_format:H:i:s',
             'check_out_time' => 'date_format:H:i:s',
             'expired_date' => 'date_format:H:i:s',
+            'work_type' => 'in:wfa,wfo,wfh',
             'status' => 'prohibited'
         ]);
 
@@ -91,8 +104,15 @@ class ScheduleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Schedule $schedule)
+    public function destroy($id)
     {
+        $schedule = Schedule::find($id);
+        if(!$schedule) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Schedule not found'
+            ], 404);
+        }
         $schedule->delete();
         return response()->json([
             'status' => 'successful',

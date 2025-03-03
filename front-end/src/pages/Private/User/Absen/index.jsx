@@ -1,13 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
+import UserService from '@/services/UserService';
+import { Webcam, Loading, Container } from "@/components";
 import { useEffect, useRef, useState } from "react"
-import { Webcam, FormAbsen } from "@/components";
-import { handleInPopup } from '@/utils/Popup';
-import { checkPermission } from '@/utils/Permission';
-import { getOffices, getLocation, checkLocation, handleSubmitAbsen, getAttendance } from '@/utils/Api';
-import { stopWebcam } from '@/utils/Webcam';
-import { Loading, Container } from "@/components";
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
+import { checkPermission } from '@/utils/Permission';
+import { handleInPopup } from '@/utils/Popup';
+import { stopWebcam } from '@/utils/Webcam';
+import { Form } from "@/components/User/Absen";
 
 const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   const [webcamStream, setWebcamStream] = useState(null);
@@ -45,14 +45,14 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   }
 
   const handleSubmit = async e => {
-    await handleSubmitAbsen({e, setIsSubmitting, setShowPopup, data, callback: () => {
+    await UserService.handleSubmitAbsen({e, setIsSubmitting, setShowPopup, data, callback: () => {
       handleStopWebcam()
       location.replace('/')
     }})
   }
 
   const handleCheckLocation = async e => {
-    const obj = await checkLocation({
+    const obj = await UserService.checkLocation({
       ifSuccess: () => setPage(2),
       e, data, setShowPopup
     })
@@ -73,7 +73,7 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
 
-  const { data: offices, execute: setOffices } = useMultipleFetch({fetchs: [getOffices], setLoading, 
+  const { data: offices, execute: setOffices } = useMultipleFetch({fetchs: [UserService.getOffices], setLoading, 
     errorCallbackMap: {
         getOffices: handleErrorOffices,
     }
@@ -85,7 +85,7 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   }
 
   const isAbsen = async () => {
-    const data = await getAttendance()
+    const data = await UserService.getAttendance()
     
     if(data) {
       location.replace('/')
@@ -99,7 +99,7 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   }, [])
   useEffect(() => {
     if(grant?.location) {
-      getLocation({setShowPopup, callback: setData})
+      UserService.getLocation({setShowPopup, callback: setData})
     }
   }, [grant])
 
@@ -116,7 +116,7 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
         <>
         {children}
         <Container size={'-lg'} marginTop={5}>
-          { page === 1 ? <FormAbsen grant={grant} offices={offices?.getOffices} handleCheckLocation={handleCheckLocation} /> : <Webcam isSubmitting={isSubmitting} imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} handleStopWebcam={handleStopWebcam} />}
+          { page === 1 ? <Form grant={grant} offices={offices?.getOffices} handleCheckLocation={handleCheckLocation} /> : <Webcam isSubmitting={isSubmitting} imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} handleStopWebcam={handleStopWebcam} />}
         </Container>
         </>
       } 

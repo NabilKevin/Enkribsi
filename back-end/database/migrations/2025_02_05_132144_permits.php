@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('leader_id');
-            $table->unsignedBigInteger('office_id');
+            $table->unsignedBigInteger('office_id')->nullable()->default(null);
             $table->date('date');
             $table->enum('permit_type', ['izin', 'sakit', 'wfa', 'wfh']);
             $table->text('reason');

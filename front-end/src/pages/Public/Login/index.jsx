@@ -1,38 +1,51 @@
 /* eslint-disable react/prop-types */
-import axios from "axios";
 import { useState } from "react";
-import { BASE_URL_API } from "@/config";
-import { API_ENDPOINTS } from "../../../config";
+import UserService from "@/services/UserService";
+import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 
 const Login = ({checkAuth}) => {
   const [error, setError] = useState()
 
+  const handleErrorLogin = (e) => {
+    console.log(e);
+    
+    setError(e.response?.data);
+  }
+
+  const handleSuccessLogin = () => {
+    location.replace('/')
+    checkAuth()
+  }
+
+  const { execute: login } = useMultipleFetch({fetchs: [UserService.handleLogin], 
+    errorCallbackMap: {
+      handleLogin: handleErrorLogin
+    }, 
+    successCallbackMap: {
+      handleLogin: handleSuccessLogin
+    }});
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    try {
-      const authdata = {}
-      Array.from(e.target).forEach(e => {
-        if(e.tagName.toLowerCase() !== 'button') {
-          if(e.type.toLowerCase() === 'checkbox') {
-            authdata[e.name] = e.checked
-          } else {
-            authdata[e.name] = e.value
-          }
+    const authdata = {}
+    Array.from(e.target).forEach(e => {
+      if(e.tagName.toLowerCase() !== 'button') {
+        if(e.type.toLowerCase() === 'checkbox') {
+          authdata[e.name] = e.checked
+        } else {
+          authdata[e.name] = e.value
         }
-      })
-      
-      await axios.post(`${BASE_URL_API}${API_ENDPOINTS.LOGIN}`, authdata)
-      location.replace('/')
-      checkAuth()
-    } catch(err) {
-      
-      setError(err.response?.data);
-    }
+      }
+    })
+    
+    login(authdata)
   }
+
+  
   return (
 <div className="container d-flex align-items-center gap-4 flex-column p-4 pt-1 mt-5">
         <div>
-          <h2 className="text-center mb-4">Enkribsi</h2>
+          <h1 className="text-center mb-4">Enkribsi</h1>
           <p className="text-center text-muted">Smart Attendance For Employee</p>
         </div>
         <div className="p-4 pt-0 w-100" style={{maxWidth: "600px"}}>
