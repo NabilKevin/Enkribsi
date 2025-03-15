@@ -17,7 +17,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email:dns',
+            'email' => 'required|email',
             'password' => 'required',
             'remember_me' => 'boolean'
         ]);
@@ -62,7 +62,7 @@ class AuthController extends Controller
         ], 401);
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
         return response()->json([
             'status' => 'successful',

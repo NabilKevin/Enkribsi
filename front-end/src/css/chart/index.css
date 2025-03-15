@@ -3,4 +3,8 @@
     width: 450px !important;
     height: 450px !important;
   }
+  .barchart {
+    width: 800px !important;
+    height: 400px !important;
+  }
 }

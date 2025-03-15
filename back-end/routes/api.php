@@ -14,8 +14,10 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\HrController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\WfhScheduleController;
 use App\Http\Middleware\jwtMiddleware;
 use App\Http\Middleware\isNotAdmin;
+use App\Http\Middleware\isWeekend;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -38,12 +40,14 @@ Route::middleware(jwtMiddleware::class)->group(function () {
     Route::prefix('hr')->middleware(isHR::class)->group(function() {
         Route::get('/permits/today', [HrController::class, 'getTodayPermits']);
         Route::get('/employees', [HrController::class, 'getEmployees']);
-        Route::get('/employees/{id}/attendance', [HrController::class, 'getEmployeeAttendance']);
-        Route::get('/attendances', [HrController::class, 'getAttendances']);
+        Route::get('/employees/{username}/attendance', [HrController::class, 'getEmployeeAttendance']);
+        Route::get('/employees/attendance', [HrController::class, 'getAttendances']);
         Route::post('/report', [HrController::class, 'makeReport']);
+        Route::get('/audiences', [HrController::class, 'getAudiences']);
         Route::resource('offices', OfficeController::class);
         Route::resource('schedules', ScheduleController::class);
         Route::resource('announcements', AnnouncementController::class);
+        Route::resource('wfh/schedules', WfhScheduleController::class);
     });
     Route::prefix('bod')->middleware(isBOD::class)->group(function() {
         Route::post('/permit/approve/{id}', [BodController::class, 'approvePermit']);
@@ -66,17 +70,20 @@ Route::middleware(jwtMiddleware::class)->group(function () {
     });
 
     Route::middleware(isNotAdmin::class)->group(function() {
-        Route::post('/checklocation', [AbsenController::class, 'checkLocation'] );
-        Route::post('/checkschedulewfah', [AbsenController::class, 'checkScheduleWfah']);
-        Route::post('/absent', [AbsenController::class, 'absent']);
-        Route::post('/permit', [AbsenController::class, 'storePermit']);
-        Route::post('/permit/cancel/{id}', [AbsenController::class, 'cancelPermit']);
-        Route::post('/leave', [AbsenController::class, 'leave']);
+        Route::middleware(isWeekend::class)->group(function() {
+            Route::post('/checklocation', [AbsenController::class, 'checkLocation'] );
+            Route::post('/checkschedulewfh', [AbsenController::class, 'checkScheduleWfh']);
+            Route::post('/absent', [AbsenController::class, 'absent']);
+            Route::post('/permit', [AbsenController::class, 'storePermit']);
+            Route::post('/permit/cancel/{id}', [AbsenController::class, 'cancelPermit']);
+            Route::post('/leave', [AbsenController::class, 'leave']);
+            Route::get('/attendance', [AbsenController::class, 'getAttendance']);
+            Route::get('/offices', [AbsenController::class, 'getOffices']);
+        });
+
+        Route::get('/permits', [AbsenController::class, 'getPermits']);
         Route::get('/presences/count', [AbsenController::class, 'getPresencesCount']);
         Route::get('/presences', [AbsenController::class, 'getPresences']);
-        Route::get('/attendance', [AbsenController::class, 'getAttendance']);
-        Route::get('/permits', [AbsenController::class, 'getPermits']);
-        Route::get('/offices', [AbsenController::class, 'getOffices']);
 
         Route::post('/addphoto', [UserController::class, 'addPhotoProfile']);
         Route::get('/me', [UserController::class, 'me']);

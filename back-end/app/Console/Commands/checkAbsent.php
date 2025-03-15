@@ -28,7 +28,7 @@ class checkAbsent extends Command
      */
     public function handle()
     {
-        $usersNotPresence = User::whereDoesntHave('attendances', function ($query) {
+        $usersNotPresence = User::where('role', '!=', 'admin')->whereDoesntHave('attendances', function ($query) {
             $query->where('date', Carbon::now()->toDateString());
         })->get();
         foreach($usersNotPresence as $user) {

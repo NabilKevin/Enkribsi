@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Office;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\OfficeResource;
 use Illuminate\Support\Facades\Validator;
 
 class OfficeController extends Controller
@@ -17,7 +18,7 @@ class OfficeController extends Controller
         return response()->json([
             'status' => 'successful',
             'message' => 'Offices successfully gotten',
-            'data' => Office::all()
+            'data' => OfficeResource::collection(Office::all())
         ], 200);
     }
 
@@ -31,8 +32,8 @@ class OfficeController extends Controller
             'latitude' => 'numeric|required',
             'longitude' => 'numeric|required',
             'radius' => 'required',
-            'status' => 'prohibited',
-            'work_type' => 'required|in:wfa,wfo,wfh'
+            'work_type' => 'required|in:wfh,wfa,wfo',
+            'status' => 'prohibited'
         ]);
 
         if($validator->fails()) {
@@ -57,9 +58,20 @@ class OfficeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Office $office)
+    public function show($id)
     {
-        //
+        $office = Office::find($id);
+        if(!$office) {
+            return response()->json([
+                'message' => 'Kantor tidak ditemukan',
+                'status' => 'unsuccessful'
+            ], 404);
+        }
+        return response()->json([
+            'message' => 'Berhasil mendapatkan kantor',
+            'status' => 'success',
+            'data' => $office->only(['name', 'work_type', 'latitude', 'longitude', 'radius'])
+        ], 200);
     }
 
     /**
@@ -77,8 +89,8 @@ class OfficeController extends Controller
         $rule = [
             'latitude' => 'numeric',
             'longitude' => 'numeric',
-            'status' => 'prohibited',
-            'work_type' => 'in:wfa,wfo,wfh'
+            'work_type' => 'in:wfh,wfa,wfo',
+            'status' => 'prohibited'
         ];
 
         if(isset($request->name) && $office->name !== $request->name) {
@@ -95,6 +107,8 @@ class OfficeController extends Controller
         }
 
         $data = $request->all();
+
+        $data['status'] = 'pending';
 
         $office->update($data);
 

@@ -17,7 +17,6 @@ return new class extends Migration
             $table->time('check_in_time');
             $table->time('check_out_time');
             $table->date('expired_date')->nullable();
-            $table->enum('work_type', ['wfh', 'wfa', 'wfo'])->default('wfo');
             $table->enum('status', ['pending', 'active', 'inactive'])->default('pending');
             $table->timestamps();
         });

@@ -9,11 +9,7 @@ import { useEffect, useState } from "react"
 const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, setIsLongClicked, children}) => {
   const [loading, setLoading] = useState(true)
 
-  const handleErrorNotifications = e => {
-    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-  }
-
-  const handleErrorDeleteNotifications = e => {
+  const handleError = e => {
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
 
@@ -24,15 +20,10 @@ const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, 
     setIsLongClicked(false)
   }
 
-  const { data: notifications, execute: setNotifications } = useMultipleFetch({fetchs: [UserService.getNotifications], setLoading, 
+  const { data: notifications, singleExecute } = useMultipleFetch({fetchs: [UserService.getNotifications, UserService.deleteNotifications], setLoading, 
     errorCallbackMap: {
-        getNotifications: handleErrorNotifications,
-    }
-  });
-
-  const { execute: setDeleteNotifications } = useMultipleFetch({fetchs: [UserService.deleteNotifications], 
-    errorCallbackMap: {
-        deleteNotifications: handleErrorDeleteNotifications,
+        getNotifications: handleError,
+        deleteNotifications: handleError,
     },
     successCallbackMap: {
         deleteNotifications: handleSuccessDeleteNotifications
@@ -40,7 +31,7 @@ const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, 
   });
 
   const fetch_data = async () => {
-    setNotifications()
+    singleExecute('getNotifications')
   }
 
   const handleDeleteSelected = async e => {
@@ -54,7 +45,7 @@ const Notifications = ({setShowPopup, setShowNotificationButton, isLongClicked, 
     if(slugs.length === 0) {
       handleInPopup({title: 'Peringatan!', content: 'Kamu harus menyeleksi minimal 1 notifikasi untuk dihapus!', setShowPopup})
     } else {
-      setDeleteNotifications(slugs)
+      singleExecute('deleteNotifications', slugs)
     }
     
   }

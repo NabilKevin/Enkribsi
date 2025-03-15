@@ -1,0 +1,22 @@
+@media screen and (max-width: 750px) {
+  .header-text-wfhschedule a {
+    font-size: 14px;
+  } 
+  .header-text-wfhschedule h2 {
+    font-size: 20px;
+  } 
+}
+@media screen and (max-width: 450px) {
+  .header-text-wfhschedule {
+    flex-direction: column;
+    align-items: start !important;
+  } 
+  .header-text-wfhschedule a {
+    width: 100%;
+    margin-top: .75rem;
+  } 
+}
+
+.btn-action-office {
+  padding: 6px 8px;
+}

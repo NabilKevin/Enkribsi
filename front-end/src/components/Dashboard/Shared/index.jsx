@@ -4,13 +4,16 @@ import { Card } from "@/components"
 
 const Links = ({display, addClass}) => {
   const path = location.pathname.split('/')[2]
+  
   return (
     <div className={`links gap-1 bg-dark ${addClass}`} style={{ display: display }}>
       <a href="/hr" className={`px-3 pb-2 pt-3 ${!path ? 'fw-bold' : ''}`} >Dashboard</a>
-      <a href="/hr/statistik" className={`px-3 pb-2 pt-3 ${path === 'statistik' ? 'fw-bold' : ''}`}>Statistik</a>
-      <a href="/hr/pengumuman" className={`px-3 pb-2 pt-3 ${path === 'pengumuman' ? 'fw-bold' : ''}`}>Pengumuman</a>
-      <a href="/hr/kantor" className={`px-3 pb-2 pt-3 ${path === 'kantor' ? 'fw-bold' : ''}`}>Kantor</a>
-      <a href="/hr/jadwal" className={`px-3 pb-2 pt-3 ${path === 'jadwal' ? 'fw-bold' : ''}`}>Jadwal Kantor</a>
+      <a href="/hr/statistics" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('statistic') ? 'fw-bold' : ''}`}>Statistik</a>
+      <a href="/hr/announcements" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('announcement') ? 'fw-bold' : ''}`}>Pengumuman</a>
+      <a href="/hr/offices" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('office') ? 'fw-bold' : ''}`}>Kantor</a>
+      <a href="/hr/schedules" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('schedule') ? 'fw-bold' : ''}`}>Jadwal Kantor</a>
+      <a href="/hr/wfh/schedules" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('wfh') ? 'fw-bold' : ''}`}>Jadwal Wfh</a>
+      <a href="/hr/profile" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('profile') ? 'fw-bold' : ''}`}>Profile</a>
     </div>
   )
 }

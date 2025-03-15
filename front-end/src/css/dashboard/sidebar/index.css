@@ -54,12 +54,12 @@
   animation: slideUp 0.5s forwards;
 }
 
-@media screen and (min-width: 567px) and (max-width: 750px) {
+@media screen and (min-width: 700px) and (max-width: 750px) {
   .sidebar {
     width: 35vw;
   }
 }
-@media screen and (max-width: 567px) {
+@media screen and (max-width: 700px) {
   .sidebar {
     height: 75px;
     width: 100%;

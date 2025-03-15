@@ -9,12 +9,14 @@ use App\Models\Attendance;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\TodayPermitsResource;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\HrAttendanceResource;
+use App\Http\Resources\TodayPermitsResource;
+use App\Models\Division;
 
 // Done:
-// buat jadwal wfa/wfh
+// buat jadwal wfh
 // buat jadwal
 // buat office
 // buat announcement
@@ -54,14 +56,15 @@ class HrController extends Controller
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get employee(s)',
-            'data' => User::select(['username', 'role'])->whereLike('username', "%$key%")->where('role', "user")->orderBy('id', $order)->paginate($perPage, ['*'], 'page', $page)
+            'data' => User::select(['username', 'role'])->whereLike('username', "%$key%")->where('role', '!=',  'admin')->orderBy('id', $order)->paginate($perPage, ['*'], 'page', $page)
         ], 200);
     }
     private function validateDates($data, $addRule = []) {
         $rule = [
             'range' => 'in:daily,weekly,monthly|required_without_all:start_date,end_date',
             'start_date' => 'date|required_with:end_date',
-            'end_date' => 'date|required_with:start_date'
+            'end_date' => 'date|required_with:start_date|after_or_equal:start_date',
+            'page' => 'int|min:1'
         ];
 
         $validator = Validator::make($data, array_merge($rule, $addRule));
@@ -85,14 +88,15 @@ class HrController extends Controller
 
         return ['startDate' => Carbon::parse($data->start_date)->toDateString(), 'endDate' => Carbon::parse($data->end_date)->toDateString()];
     }
-    public function getEmployeeAttendance(Request $request, $id)   {
+    public function getEmployeeAttendance(Request $request, $username)   {
         $fail = $this->validateDates($request->all());
         if($fail) {
             return response()->json($fail, 422);
         }
         $date = $this->getDates($request);
+        $page = $request->input('page', 1);
 
-        $user = User::find($id);
+        $user = User::firstWhere('username', $username);
 
         if(!$user) {
             return response()->json([
@@ -101,19 +105,41 @@ class HrController extends Controller
             ], 404);
         }
 
-        $attendance = Attendance::where('user_id', $id)->whereBetween('date', [$date['startDate'], $date['endDate']])->get();
+        $attendance = Attendance::with(['office.schedules', 'user'])->where('user_id', $user->id)->whereBetween('date', [$date['startDate'], $date['endDate']]);
 
-        if(Count($attendance)=== 0) {
+        $attendances = $attendance->get();
+
+        if(Count($attendances)=== 0) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => 'Attendance not found'
+                'message' => 'Kehadiran tidak di temukan'
             ], 404);
         }
+
+        $attendance = $attendance->paginate(10, ['*'], 'page', $page);
+        HrAttendanceResource::collection($attendance);
 
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get attendance(s)',
-            'data' => $attendance
+            'data' => [
+                'data' => $attendance,
+                'hadir' => Count($attendances->whereIn('status', ['absen', 'pulang'])),
+                'telat' => Count(
+            $attendances->whereIn('status', ['absen', 'pulang'])
+                    ->map(function($value) {
+                        $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->check_in_time);
+                        $time2 = Carbon::parse($value->check_in_time);
+                        if($time2->gt($time)) {
+                            $value->makeHidden(['office']);
+                            return $value;
+                        }
+                    })->filter()),
+                'izin' => Count($attendances->where('status', 'izin')),
+                'alfa' => Count($attendances->where('status', 'alfa')),
+                'start_date' => str_replace('-', '/',$date['startDate']),
+                'end_date' => str_replace('-', '/',$date['endDate'])
+            ]
         ], 200);
     }
     public function getAttendances(Request $request)
@@ -123,36 +149,64 @@ class HrController extends Controller
             return response()->json($fail, 422);
         }
         $date = $this->getDates($request);
+        $page = $request->input('page', 1);
 
-        $attendance = Attendance::whereBetween('date', [$date['startDate'], $date['endDate']])->get();
+        $attendance = Attendance::with(['user', 'office.schedules'])->whereBetween('date', [$date['startDate'], $date['endDate']])->orderBy('date', 'asc');
 
-        if(Count($attendance)=== 0) {
+        $attendances = $attendance->get();
+
+        if(Count($attendances)=== 0) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => 'Attendance not found'
+                'message' => 'Kehadiran tidak di temukan'
             ], 404);
         }
+
+        $attendance = $attendance->paginate(10, ['*'], 'page', $page);
+        HrAttendanceResource::collection($attendance);
 
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get attendances',
-            'data' => $attendance
+            'data' => [
+                'data' => $attendance,
+                'hadir' => Count($attendances->whereIn('status', ['absen', 'pulang'])),
+                'telat' => Count(
+            $attendances->whereIn('status', ['absen', 'pulang'])
+                    ->map(function($value) {
+                        $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->check_in_time);
+                        $time2 = Carbon::parse($value->check_in_time);
+                        if($time2->gt($time)) {
+                            $value->makeHidden(['office']);
+                            return $value;
+                        }
+                    })->filter()),
+                'izin' => Count($attendances->where('status', 'izin')),
+                'alfa' => Count($attendances->where('status', 'alfa')),
+                'start_date' => str_replace('-', '/',$date['startDate']),
+                'end_date' => str_replace('-', '/',$date['endDate'])
+            ]
         ], 200);
     }
     public function makeReport(Request $request)
     {
         $fail = $this->validateDates($request->all(), [
-            'user_id' => 'exists:users,id'
+            'username' => 'exists:users,username'
         ]);
         if($fail) {
             return response()->json($fail, 422);
         }
 
         $date = $this->getDates($request);
+        $user_id = null;
+
+        if(isset($request->username)) {
+            $user_id = User::firstWhere('username', $request->username)->id;
+        }
 
         $attendances = Attendance::with(['office.schedules', 'user'])
-            ->when(isset($request->user_id), function ($query) use ($request) {
-                $query->where('user_id', $request->user_id);
+            ->when(isset($request->username), function ($query) use ($user_id) {
+                $query->where('user_id', $user_id);
             })
             ->whereBetween('date', [$date['startDate'], $date['endDate']])
             ->get()
@@ -321,5 +375,21 @@ class HrController extends Controller
         }
         $data = $response->json();
         return response()->json(['status' => 'successful', 'message' => 'Data berhasil diterima!', 'data' => $data]);
+    }
+
+    public function getAudiences()
+    {
+        $users = Division::with('user')->where('name', 'bod')->get();
+        if(Count($users) === 0) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Tidak ada bod'
+            ], 404);
+        }
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Sukses mendapat bod',
+            'data' => $users
+        ], 200);
     }
 }

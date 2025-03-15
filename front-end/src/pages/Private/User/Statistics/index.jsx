@@ -65,26 +65,18 @@ function Statistics({setShowNotificationButton, setShowPopup}) {
       }
     ],
   }
-  const handleErrorPresences = e => {
+  const handleError = e => {
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
-  const handleErrorPresencesCount = e => {
-    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-  }
-  const { data: presencesCount, execute: setPresencesCount } = useMultipleFetch({fetchs: [UserService.getPresencesCount], setLoading, 
+  const { data, execute } = useMultipleFetch({fetchs: [UserService.getPresencesCount, UserService.getPresences], setLoading, 
     errorCallbackMap: {
-        getPresencesCount: handleErrorPresencesCount,
-    }
-  });
-  const { data: presences, execute: setPresences } = useMultipleFetch({fetchs: [UserService.getPresences], setLoading, 
-    errorCallbackMap: {
-        getPresencesCount: handleErrorPresences,
+        getPresencesCount: handleError,
+        getPresences: handleError
     }
   });
 
   const fetch_data = async () => {
-    setPresencesCount()
-    setPresences()
+    execute()
   }
   const getHadir = async (type) => {
     setIsOpen({
@@ -118,7 +110,7 @@ function Statistics({setShowNotificationButton, setShowPopup}) {
     fetch_data()
     import('@/css/user/statistics/index.css')
   }, [])
-  
+
   return (
     <>
     {loading && <Loading />}
@@ -130,27 +122,27 @@ function Statistics({setShowNotificationButton, setShowPopup}) {
             <div>
                 <div>
                   {
-                    presencesCount?.getPresencesCount ? Object.values(presencesCount?.getPresencesCount).every(value => value === 0) ? <h1 className='text-center'>Kamu belum pernah absen!</h1> : 
+                    data?.getPresencesCount ? Object.values(data?.getPresencesCount).every(value => value === 0) ? <h1 className='text-center'>Kamu belum pernah absen!</h1> : 
                     <>
                       <div className='d-flex justify-content-center'>
-                        <Piechart statistics={presencesCount?.getPresencesCount} />
+                        <Piechart statistics={data?.getPresencesCount} />
                       </div>
                       <div className="mt-4">
                         <Card presence={presence} type={'hadir'} getHadir={getHadir} />
                         {presence === 'hadir' &&
-                          <Table isOpen={isOpen.hadir} data={presences?.getPresences?.[presence]} type={presence} list={list} />
+                          <Table isOpen={isOpen.hadir} data={data?.getPresences?.[presence]} type={presence} list={list} />
                         }
                         <Card presence={presence} type={'izin'} getHadir={getHadir} />
                         {presence === 'izin' &&
-                          <Table isOpen={isOpen.izin} data={presences?.getPresences?.[presence]} type={presence} list={list} />
+                          <Table isOpen={isOpen.izin} data={data?.getPresences?.[presence]} type={presence} list={list} />
                         }
                         <Card presence={presence} type={'telat'} getHadir={getHadir} />
                         {presence === 'telat' &&
-                          <Table isOpen={isOpen.telat} data={presences?.getPresences?.[presence]} type={presence} list={list} />
+                          <Table isOpen={isOpen.telat} data={data?.getPresences?.[presence]} type={presence} list={list} />
                         }
                         <Card presence={presence} type={'alfa'} getHadir={getHadir} />
                         {presence === 'alfa' &&
-                          <Table isOpen={isOpen.alfa} data={presences?.getPresences?.[presence]} type={presence} list={list} />
+                          <Table isOpen={isOpen.alfa} data={data?.getPresences?.[presence]} type={presence} list={list} />
                         }
                       </div>
                     </>

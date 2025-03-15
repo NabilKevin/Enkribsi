@@ -1,0 +1,92 @@
+.card {
+  height: 75vh;
+}
+
+@media screen and (max-height: 100vh) {
+  .container-lg {
+    margin-bottom: 0 !important;
+  }
+}
+.card * {
+  font-size: 1.1rem !important;
+}
+.card h1 {
+  font-size: 2rem !important;
+}
+.card h2 {
+  font-size: 1.8rem !important;
+}
+.card h3 {
+  font-size: 1.6rem !important;
+}
+.card h4 {
+  font-size: 1.4rem !important;
+}
+.card h5 {
+  font-size: 1.2rem !important;
+}
+.card h6 {
+  font-size: 1.1rem !important;
+}
+@media screen and (max-width: 1100px) {
+  .card * {
+    font-size: 1rem !important;
+  }
+  .card h1 {
+    font-size: 1.9rem !important;
+  }
+  .card h2 {
+    font-size: 1.7rem !important;
+  }
+  .card h3 {
+    font-size: 1.5rem !important;
+  }
+  .card h4 {
+    font-size: 1.3rem !important;
+  }
+  .card h5 {
+    font-size: 1.1rem !important;
+  }
+  .card h6 {
+    font-size: 1rem !important;
+  }
+}
+@media screen and (max-width: 950px) {
+  .card * {
+    font-size: 1rem !important;
+  }
+  .card h1 {
+    font-size: 1.7rem !important;
+  }
+  .card h2 {
+    font-size: 1.5rem !important;
+  }
+  .card h3 {
+    font-size: 1.3rem !important;
+  }
+  .card h4 {
+    font-size: 1.1rem !important;
+  }
+  .desc-span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+@media screen and (max-width: 800px) {
+  .card * {
+    font-size: 1rem !important;
+  }
+  .card h1 {
+    font-size: 1.6rem !important;
+  }
+  .card h2 {
+    font-size: 1.4rem !important;
+  }
+  .card h3 {
+    font-size: 1.2rem !important;
+  }
+  .card-body {
+    padding: 0 !important;
+  }
+}

@@ -4,7 +4,6 @@ import base64
 import cv2
 import dlib
 import numpy as np
-import base64
 import face_recognition
 from io import BytesIO
 import sys
@@ -19,6 +18,56 @@ cv2.setLogLevel(1)
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(f"{script_dir}/shape_predictor_68_face_landmarks.dat")  # Pastikan file ini ada di direktori
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + f'{script_dir}/haarcascade_frontalface_default.xml')
+
+def is_face_covered(image, landmarks):
+    """
+    Fungsi untuk memeriksa apakah wajah tertutup oleh objek seperti masker, kacamata, atau topi.
+    """
+    # Ambil area-area penting pada wajah
+    left_eye = (landmarks.part(36).x, landmarks.part(36).y)  # Mata kiri
+    right_eye = (landmarks.part(45).x, landmarks.part(45).y)  # Mata kanan
+    nose_tip = (landmarks.part(30).x, landmarks.part(30).y)  # Ujung hidung
+    mouth_left = (landmarks.part(48).x, landmarks.part(48).y)  # Sudut kiri mulut
+    mouth_right = (landmarks.part(54).x, landmarks.part(54).y)  # Sudut kanan mulut
+
+    # Hitung intensitas rata-rata area wajah
+    face_roi = image[
+        min(left_eye[1], right_eye[1]):max(mouth_left[1], mouth_right[1]),
+        min(left_eye[0], mouth_left[0]):max(right_eye[0], mouth_right[0])
+    ]
+    if face_roi.size == 0:
+        return True  # Area wajah tidak valid
+    face_mean_intensity = np.mean(face_roi)
+
+    # Periksa area mulut (untuk masker)
+    mouth_roi = image[
+        mouth_left[1]:mouth_right[1],
+        mouth_left[0]:mouth_right[0]
+    ]
+    if mouth_roi.size == 0:
+        return True  # Area mulut tidak valid
+    mouth_mean_intensity = np.mean(mouth_roi)
+
+    # Periksa area dahi (untuk topi)
+    forehead_roi = image[
+        max(0, left_eye[1] - 50):left_eye[1],
+        left_eye[0]:right_eye[0]
+    ]
+    if forehead_roi.size == 0:
+        return True  # Area dahi tidak valid
+    forehead_mean_intensity = np.mean(forehead_roi)
+
+    # Threshold untuk mendeteksi penutup
+    intensity_threshold = 30  # Sesuaikan jika perlu
+
+    # Cek apakah ada penutup
+    if abs(face_mean_intensity - mouth_mean_intensity) > intensity_threshold:
+        return True  # Mulut tertutup (masker)
+    if abs(face_mean_intensity - forehead_mean_intensity) > intensity_threshold:
+        return True  # Dahi tertutup (topi)
+
+    return False  # Tidak ada penutup
+
 
 @app.route('/generateExcell', methods=['POST'])
 def generateExcell():
@@ -81,33 +130,40 @@ def is_face_facing_camera():
     faces = detector(gray)
     if len(faces) == 0:
         return jsonify({"message": "Tidak ada wajah yang terdeteksi.", 'status': "unsuccessful"}), 404
+    elif len(faces) > 1:
+        return jsonify({"message": "Lebih dari satu wajah terdeteksi. Gambar ditolak.", 'status': "unsuccessful"}), 422
 
-    for face in faces:
-        # Get facial landmarks
-        landmarks = predictor(gray, face)
+    face = faces[0]
 
-        # Extract key points for orientation analysis
-        left_eye = (landmarks.part(36).x, landmarks.part(36).y)  # Left eye corner
-        right_eye = (landmarks.part(45).x, landmarks.part(45).y)  # Right eye corner
-        nose_tip = (landmarks.part(30).x, landmarks.part(30).y)  # Nose tip
+    # Get facial landmarks
+    landmarks = predictor(gray, face)
 
-        # Calculate angle between eyes to determine face orientation
-        delta_x_eyes = right_eye[0] - left_eye[0]
-        delta_y_eyes = right_eye[1] - left_eye[1]
-        angle_eyes = np.degrees(np.arctan2(delta_y_eyes, delta_x_eyes))
+    if is_face_covered(image, landmarks):
+        return jsonify({"message": "Wajah tertutup oleh objek seperti masker, kacamata, atau topi.", 'status': "unsuccessful"}), 422
 
-        # Calculate the position of the nose relative to the eyes
-        nose_to_left_eye = np.sqrt((nose_tip[0] - left_eye[0])**2 + (nose_tip[1] - left_eye[1])**2)
-        nose_to_right_eye = np.sqrt((nose_tip[0] - right_eye[0])**2 + (nose_tip[1] - right_eye[1])**2)
+    # Extract key points for orientation analysis
+    left_eye = (landmarks.part(36).x, landmarks.part(36).y)  # Left eye corner
+    right_eye = (landmarks.part(45).x, landmarks.part(45).y)  # Right eye corner
+    nose_tip = (landmarks.part(30).x, landmarks.part(30).y)  # Nose tip
 
-        # Check if the face is facing the camera
-        # Conditions:
-        # 1. The angle between the eyes should be close to 0 (frontal face).
-        # 2. The nose should be roughly centered between the eyes.
-        if abs(angle_eyes) < 10 and abs(nose_to_left_eye - nose_to_right_eye) < 20:
-            return jsonify({"message": "Wajah menghadap ke kamera.", 'status': "successful"}), 200
-        else:
-            return jsonify({"message": "Wajah tidak menghadap ke kamera.", 'status': "unsuccessful"}), 422
+    # Calculate angle between eyes to determine face orientation
+    delta_x_eyes = right_eye[0] - left_eye[0]
+    delta_y_eyes = right_eye[1] - left_eye[1]
+    angle_eyes = np.degrees(np.arctan2(delta_y_eyes, delta_x_eyes))
+
+    # Calculate the position of the nose relative to the eyes
+    nose_to_left_eye = np.sqrt((nose_tip[0] - left_eye[0])**2 + (nose_tip[1] - left_eye[1])**2)
+    nose_to_right_eye = np.sqrt((nose_tip[0] - right_eye[0])**2 + (nose_tip[1] - right_eye[1])**2)
+
+    # Check if the face is facing the camera
+    # Conditions:
+    # 1. The angle between the eyes should be close to 0 (frontal face).
+    # 2. The nose should be roughly centered between the eyes.
+    if abs(angle_eyes) < 10 and abs(nose_to_left_eye - nose_to_right_eye) < 20:
+        return jsonify({"message": "Wajah menghadap ke kamera.", 'status': "successful"}), 200
+    else:
+        return jsonify({"message": "Wajah tidak menghadap ke kamera.", 'status': "unsuccessful"}), 422
+    
 @app.route('/validasiwajah', methods=['POST'])
 def recognize_and_validate():
     # Ambil data JSON dari request
@@ -165,7 +221,7 @@ def recognize_and_validate():
         }), 200 if results[0] else 400
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"message": str(e)}), 500
     
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

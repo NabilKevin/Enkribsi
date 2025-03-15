@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('leader_id');
             $table->unsignedBigInteger('office_id')->nullable()->default(null);
             $table->date('date');
-            $table->enum('permit_type', ['izin', 'sakit', 'wfa', 'wfh']);
+            $table->enum('permit_type', ['izin', 'sakit', 'wfh']);
             $table->text('reason');
             $table->text('bod_reason')->nullable()->default(null);
             $table->enum('status', ['pending', 'approved', 'denied', 'canceled'])->default('pending');

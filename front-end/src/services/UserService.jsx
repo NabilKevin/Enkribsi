@@ -19,8 +19,8 @@ class UserService
     return response.data?.data
   }
   
-  static async pulang () {
-    const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.USER.PULANG}`)
+  static async pulang (data) {
+    const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.USER.PULANG}`, data)
     return response.data
   }
   
@@ -52,6 +52,27 @@ class UserService
     const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.USER.ME}`)
     return response.data?.user
   }
+  static async checkLocation (e, data) {
+    const response = await axios.post(`${BASE_URL_API}${e.target.work_type.value === 'wfo' ? API_ENDPOINTS.USER.CHECKLOCATION : API_ENDPOINTS.USER.CHECKSCHEDULEWFH}`, data)
+    return response.data
+  }
+  
+  static async handleSubmitAddphoto (imageSrc) {
+    const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.USER.ADDPHOTO}`, {
+      'photo': imageSrc
+    })
+    return response.data
+  }
+  
+  static async handleSubmitAbsen (data) {
+    const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.USER.ABSEN}`, data)
+    return response.data
+  }
+  static async handleLogin (data) {
+    const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.USER.LOGIN}`, data)
+    return response.data
+  }
+
   static getLocation({setShowPopup, callback}) {
     if ("geolocation" in navigator) {
       try{
@@ -77,63 +98,8 @@ class UserService
       alert("Geolocation is not supported by this browser.");
     }
   };
-  
-  static async checkLocation ({e, ifSuccess, data, setShowPopup}) {
-    e.preventDefault();
-    const formData = {};
-    [...e.target].forEach(element => {
-      formData[element.name] = element.value
-    })
-  
-    formData['lat'] = data.lat 
-    formData['lon'] = data.lon
-  
-    try {
-      await axios.post(`${BASE_URL_API}${e.target.work_type.value === 'wfo' ? API_ENDPOINTS.USER.CHECKLOCATION : API_ENDPOINTS.USER.CHECKSCHEDULEWFAH}`, formData)
-      ifSuccess()
-    } catch(e) {
-      
-      handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-    }
-  
-    return formData
-  }
-  
-  static async handleSubmitAddphoto ({setIsSubmitting, callback, setShowPopup, imageSrc}) {
-    setIsSubmitting(true)
-    if(!imageSrc) {
-      setIsSubmitting(false)
-      return handleInPopup({title: 'Peringatan!', content: 'Tidak ada gambar!', setShowPopup})
-    }
-    try {
-      await axios.post(`${BASE_URL_API}${API_ENDPOINTS.USER.ADDPHOTO}`, {
-        'photo': imageSrc
-      })
-      
-      callback()
-    } catch(e) {
-      setIsSubmitting(false)
-      handleInPopup({setShowPopup, title: 'Peringatan!', content: e.response.data?.message})
-    }
-  }
-  
-  static async handleSubmitAbsen ({e, setIsSubmitting, setShowPopup, callback, data}) {
-    setIsSubmitting(true)
-    e.preventDefault()
-    if(!data || Object.keys(data).length === 0) {
-      setIsSubmitting(false)
-      return handleInPopup({title: 'Peringatan!', content: 'Tidak ada data yang diberi!', setShowPopup})
-    }
-    try {
-      await axios.post(`${BASE_URL_API}${API_ENDPOINTS.USER.ABSEN}`, data)
-      callback()
-    } catch(e) {
-      setIsSubmitting(false)
-      handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-    }
-  }
-  static async handleLogin (data) {
-    const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.USER.LOGIN}`, data)
+  static async logout() {
+    const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.USER.LOGOUT}`)
     return response.data
   }
 }

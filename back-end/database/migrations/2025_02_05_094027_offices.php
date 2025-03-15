@@ -17,6 +17,7 @@ return new class extends Migration
             $table->double('latitude');
             $table->double('longitude');
             $table->integer('radius');
+            $table->enum('work_type', ['wfo', 'wfa', 'wfh']);
             $table->enum('status', ['pending', 'active', 'inactive'])->default('pending');
             $table->timestamps();
         });

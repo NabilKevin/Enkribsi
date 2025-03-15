@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ScheduleResource;
 use Illuminate\Support\Facades\Validator;
 
 class ScheduleController extends Controller
@@ -17,7 +18,7 @@ class ScheduleController extends Controller
         return response()->json([
             'status' => 'successful',
             'message' => 'Schedules successfully gotten',
-            'data' => Schedule::with('office')->get()
+            'data' => ScheduleResource::collection(Schedule::with('office')->get())
         ], 200);
     }
 
@@ -29,9 +30,8 @@ class ScheduleController extends Controller
         $validator = Validator::make($request->all(), [
             'office_id' => 'required|exists:offices,id',
             'check_in_time' => 'date_format:H:i:s|required',
-            'check_out_time' => 'date_format:H:i:s|required',
-            'expired_date' => 'date_format:H:i:s',
-            'work_type' => 'required|in:wfa,wfo,wfh',
+            'check_out_time' => 'date_format:H:i:s|required|after_or_equal:check_in_time',
+            'expired_date' => 'date',
             'status' => 'prohibited'
         ]);
 
@@ -57,9 +57,20 @@ class ScheduleController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Schedule $schedule)
+    public function show($id)
     {
-        //
+        $schedule = Schedule::find($id);
+        if(!$schedule) {
+            return response()->json([
+                'message' => 'jadwal tidak ditemukan',
+                'status' => 'unsuccessful'
+            ], 404);
+        }
+        return response()->json([
+            'message' => 'Berhasil mendapatkan jadwal',
+            'status' => 'success',
+            'data' => $schedule->only(['office_id', 'check_in_time', 'check_out_time', 'work_type', 'expired_date'])
+        ], 200);
     }
 
     /**
@@ -77,21 +88,23 @@ class ScheduleController extends Controller
         $validator = Validator::make($request->all(), [
             'office_id' => 'exists:offices,id',
             'check_in_time' => 'date_format:H:i:s',
-            'check_out_time' => 'date_format:H:i:s',
-            'expired_date' => 'date_format:H:i:s',
-            'work_type' => 'in:wfa,wfo,wfh',
-            'status' => 'prohibited'
+            'check_out_time' => 'date_format:H:i:s|after_or_equal:check_in_time',
+            'expired_date' => 'date',
+            'status' => 'prohibited',
         ]);
 
         if($validator->fails()) {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => 'Invalid field',
+                'r' => $request->all(),
                 'errors' => $validator->errors()
             ], 422);
         }
 
         $data = $request->all();
+
+        $data['status'] = 'pending';
 
         $schedule->update($data);
 
@@ -116,7 +129,7 @@ class ScheduleController extends Controller
         $schedule->delete();
         return response()->json([
             'status' => 'successful',
-            'message' => 'Schedule successfully deleted'
+            'message' => 'Jadwal berhasil dihapus'
         ], 200);
     }
 }

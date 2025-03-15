@@ -5,43 +5,50 @@ import { useEffect, useState } from 'react';
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import { handleInPopup } from '@/utils/Popup';
 import UserService from '@/services/UserService';
+import { checkPermission } from '@/utils/Permission';
 
 const Home = ({setShowNotificationButton, setShowPopup, children, setIsHomepage}) => {
     const [loading, setLoading] = useState(true)
+    const [grant, setGrant] = useState({location: false})
+    const [loc, setLoc] = useState({lat: null, lon: null})
 
-    const handleErrorPresencesCount = e => {
+    const checkLocationPermission = async () => {
+        const callback = () => {
+          setGrant(prev => ({...prev, location: true}))
+        }
+        await checkPermission({name: 'geolocation', permitType: 'lokasi', setShowPopup, callback})
+    }
+    const handleError = e => {
         handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
     }
     const handleErrorAttendance = e => {
         if(e.status === 404) {
-            handleInPopup({title: 'Pengingat!', content: 'Kamu belum absen hari ini!', setShowPopup})
+            handleInPopup({title: 'Pengingat!', content: e.response.data?.message, setShowPopup})
         } 
-    }
-    const handleErrorPulang = e => {
-        handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
     }
     const handleSuccessPulang = e => {
         handleInPopup({title: 'Sukses!', content: e?.message, setShowPopup})
+        setTimeout(() => {
+            singleExecute('getPresencesCount')
+            singleExecute('getAttendance')
+        }, 501)
     }
 
-    const { data, execute } = useMultipleFetch({fetchs: [UserService.getPresencesCount, UserService.getAttendance], setLoading, 
+    const { data, singleExecute } = useMultipleFetch({fetchs: [UserService.getPresencesCount, UserService.getAttendance, UserService.pulang], setLoading, 
         errorCallbackMap: {
-            getPresencesCount: handleErrorPresencesCount,
-            getAttendance: handleErrorAttendance
-        }
-    });
-
-    const { data: pulangData, execute: handlePulang } = useMultipleFetch({fetchs: [UserService.pulang], setLoading,
-        errorCallbackMap: {
-            pulang: handleErrorPulang
+            getPresencesCount: handleError,
+            getAttendance: handleErrorAttendance,
+            pulang: handleError
         },
         successCallbackMap: {
             pulang: handleSuccessPulang
         },
-    })
+    });
 
     const fetch_data = async () => {
-        execute()
+        singleExecute('getPresencesCount')
+        singleExecute('getAttendance')
+        checkLocationPermission()
     }
 
     useEffect(() => {
@@ -49,27 +56,46 @@ const Home = ({setShowNotificationButton, setShowPopup, children, setIsHomepage}
         setIsHomepage(true)
         setShowNotificationButton(true)
         fetch_data()
-        
     }, [])
 
+    useEffect(() => {
+        if(grant?.location) {
+          UserService.getLocation({setShowPopup, callback: setLoc})
+        }
+    }, [grant])
+
+    const parseDate = (date) => {
+        const d = new Date(date)
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+    }
+    if(loading) {
+        return <Loading />
+    }
     return (
-        <>
-        {loading ? <Loading /> :
         <>
             {children}
             <Container size={'-fluid'} addClass={'text-center' } marginTop={5}>
                 <Row>
                     <ColHome>
+                        { data?.getAttendance ?
+                            <Card addClass={'text-white w-100 m-0 mt-3 mb-3 bg-dark'} >
+                                <p>Tanggal Masuk</p>
+                                <h5>{parseDate(data?.getAttendance?.check_in_date)}</h5>
+                            </Card>
+                          :
+                            <></>
+                        }
                         <Card addClass={'text-white w-100 m-0 mt-3 mb-3 bg-dark'} >
                             <p>{data?.getAttendance ? 'Jam' : 'Absensi'} Masuk</p>
                             <h5>{data?.getAttendance ? data?.getAttendance?.check_in_time : 'Belum hadir'}</h5>
                         </Card>
                         <Card addClass={'text-white w-100 m-0 mt-3 mb-3 bg-dark'} >
-                            <p>{data?.getAttendance?.check_out_time || Object.keys(pulangData).length > 0 ? 'Jam pulang' : 'Waktu Pulang'}</p>
+                            <p>{data?.getAttendance?.check_out_time || data?.pulang && Object.keys(data?.pulang).length > 0 ? 'Jam pulang' : 'Waktu Pulang'}</p>
                             <h5>
                                 {
                                     data?.getAttendance?.check_out_time ??
-                                    pulangData?.check_out_time ??
+                                    data?.pulang?.check_out_time ??
                                     data?.getAttendance?.office?.schedules?.[0]?.check_out_time ??
                                     '00:00'
                                 }
@@ -114,11 +140,9 @@ const Home = ({setShowNotificationButton, setShowPopup, children, setIsHomepage}
                 </svg>
             </FloatingButton>
             }
-        <ModalBox title={'Konfirmasi pulang'} callback={handlePulang}>
-            <span className='fs-5'>Kamu yakin ingin pulang?</span>
+        <ModalBox title={'Konfirmasi pulang'} callback={() => singleExecute('handlePulang', loc)}>
+            <span className='fs-5'>Anda yakin ingin pulang?</span>
         </ModalBox>
-        </>
-        }
         </>
     );
 };

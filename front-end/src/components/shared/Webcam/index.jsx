@@ -41,7 +41,7 @@ const Webcam = ({imageSrc, canvasRef, videoRef, setWebcamStream, setImageSrc, we
         {!imageSrc && (
           <div>
             <canvas ref={canvasRef} style={{ display: "none" }} />
-            <video ref={videoRef} autoPlay playsInline style={{ border: "2px solid #ccc", borderRadius: "10px" }} />
+            <video ref={videoRef} autoPlay playsInline style={{ maxWidth: "100%", border: "2px solid #ccc", borderRadius: "10px" }} />
             <br />
             <div className="d-flex flex-column align-items-center justify-content-center">
               <div className="d-flex">

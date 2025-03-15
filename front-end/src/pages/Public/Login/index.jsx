@@ -2,13 +2,18 @@
 import { useState } from "react";
 import UserService from "@/services/UserService";
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
+import { Loading } from '@/components';
 
 const Login = ({checkAuth}) => {
   const [error, setError] = useState()
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    remember_me: false
+  })
+  const [loading, setLoading] = useState(false)
 
   const handleErrorLogin = (e) => {
-    console.log(e);
-    
     setError(e.response?.data);
   }
 
@@ -17,33 +22,32 @@ const Login = ({checkAuth}) => {
     checkAuth()
   }
 
-  const { execute: login } = useMultipleFetch({fetchs: [UserService.handleLogin], 
-    errorCallbackMap: {
-      handleLogin: handleErrorLogin
-    }, 
-    successCallbackMap: {
-      handleLogin: handleSuccessLogin
-    }});
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.type.toLowerCase() === 'checkbox' ? e.target.checked : e.target.value
+    })
+  }
+
+  const { execute: login } = useMultipleFetch({fetchs: [UserService.handleLogin], setLoading, 
+  errorCallbackMap: {
+    handleLogin: handleErrorLogin
+  }, 
+  successCallbackMap: {
+    handleLogin: handleSuccessLogin
+  }});
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const authdata = {}
-    Array.from(e.target).forEach(e => {
-      if(e.tagName.toLowerCase() !== 'button') {
-        if(e.type.toLowerCase() === 'checkbox') {
-          authdata[e.name] = e.checked
-        } else {
-          authdata[e.name] = e.value
-        }
-      }
-    })
-    
-    login(authdata)
+    login(formData)
   }
 
+  if(loading) {
+    return <Loading />
+  }
   
   return (
-<div className="container d-flex align-items-center gap-4 flex-column p-4 pt-1 mt-5">
+      <div className="container d-flex align-items-center gap-4 flex-column p-4 pt-1 mt-5">
         <div>
           <h1 className="text-center mb-4">Enkribsi</h1>
           <p className="text-center text-muted">Smart Attendance For Employee</p>
@@ -55,7 +59,7 @@ const Login = ({checkAuth}) => {
           <h3 className="mb-4">Login</h3>
             <form onSubmit={handleSubmit}>
             <div className="form-floating mb-3">
-              <input autoComplete="off" type="email" className={`form-control ${error?.errors?.email ? 'is-invalid' : ''}`} id="floatingInput" placeholder="email or Email address" name="email" required/>
+              <input value={formData.email} onInput={handleChange} autoComplete="off" type="email" className={`form-control ${error?.errors?.email ? 'is-invalid' : ''}`} id="floatingInput" placeholder="email or Email address" name="email" required/>
               <label htmlFor="floatingInput">Email </label>
               {
                 error?.errors?.email && <div className="invalid-feedback">
@@ -64,7 +68,7 @@ const Login = ({checkAuth}) => {
               }
             </div>
             <div className="form-floating mb-2">
-              <input autoComplete="off" type="password" className={`form-control ${error?.errors?.password ? 'is-invalid' : ''}`} id="floatingPassword" placeholder="Password" name="password" required/>
+              <input value={formData.password} onInput={handleChange} autoComplete="off" type="password" className={`form-control ${error?.errors?.password ? 'is-invalid' : ''}`} id="floatingPassword" placeholder="Password" name="password" required/>
               <label htmlFor="floatingPassword">Password</label>
               {
                 error?.errors?.password && <div className="invalid-feedback">
@@ -73,7 +77,7 @@ const Login = ({checkAuth}) => {
               }
             </div>
             <div className="form-check mb-3">
-              <input className="form-check-input" type="checkbox" value="" name="remember_me" id="flexCheckDefault" />
+              <input value={formData.remember_me} onInput={handleChange} className="form-check-input" type="checkbox" name="remember_me" id="flexCheckDefault" />
               <label className="form-check-label" htmlFor="flexCheckDefault">Remember Me</label>
             </div>
                 <button type="submit" className="btn btn-danger w-100">Login</button>

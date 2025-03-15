@@ -1,9 +1,9 @@
 import Header from "@/components/shared/Header"
 
 /* eslint-disable react/prop-types */
-const NotFound = ({setOnlyLogo}) => {
+const NotFound = ({setOnlyLogo, setIsNotfound}) => {
   setOnlyLogo(true)
-  
+  setIsNotfound(true)
   return (
     <>
     <Header />
