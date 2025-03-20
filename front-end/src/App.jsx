@@ -28,8 +28,12 @@ import { DashboardAdmin, CreateAdmin, ProfileAdmin, EditAdmin } from '@/pages/Pr
 import axios from "axios";
 import "./css/header/index.css";
 import "./css/main.css";
+import Profile from "./pages/Private/User/Profile";
+import Permit from "./pages/Private/User/Permit";
+import ForgotPassword from "./pages/Private/User/ForgotPassword";
 
-const App = () =>  {
+
+function App() {
   axios.defaults.withCredentials = true;
 
   const [showNotificationButton, setShowNotificationButton] = useState()
@@ -41,6 +45,7 @@ const App = () =>  {
   const [showPopup, setShowPopup] = useState({show: false, slide: 'in', title: '', content: ''})
   const [onlyLogo, setOnlyLogo] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState()
 
 
   const popupRef = useRef(null)
