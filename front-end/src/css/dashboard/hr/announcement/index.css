@@ -1,0 +1,22 @@
+@media screen and (max-width: 750px) {
+  .header-text-announcement a {
+    font-size: 14px;
+  } 
+  .header-text-announcement h2 {
+    font-size: 20px;
+  } 
+}
+@media screen and (max-width: 450px) {
+  .header-text-announcement {
+    flex-direction: column;
+    align-items: start !important;
+  } 
+  .header-text-announcement a {
+    width: 100%;
+    margin-top: .75rem;
+  } 
+}
+
+.btn-action-announcement {
+  padding: 6px 8px;
+}

@@ -1,0 +1,7 @@
+export { default as Home } from "./Home";
+export { default as Addphoto } from "./Addphoto";
+export { default as Absen } from "./Absen";
+export { default as Statistics } from "./Statistics";
+export { default as Notifications } from "./Notifications";
+export { default as Notification } from "./Notification";
+export { default as PrivateLayout } from "./PrivateLayout";

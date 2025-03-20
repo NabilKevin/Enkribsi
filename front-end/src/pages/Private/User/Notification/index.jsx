@@ -1,29 +1,33 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { getNotification } from "@/utils/Api"
+import UserService from "@/services/UserService"
 import { handleInPopup } from "@/utils/Popup"
 import { Loading, Card, Container } from "@/components"
+import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 
 const Notification = ({setShowPopup}) => {
-  const [notification, setNotification] = useState()
   const [loading, setLoading] = useState(true)
 
   const {slug} = useParams()
+
+  const handleErrorNotification = e => {
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+  }
+
+  const { data: notification, execute: setNotification } = useMultipleFetch({fetchs: [UserService.getNotification], setLoading, 
+    errorCallbackMap: {
+        getNotification: handleErrorNotification,
+    }
+  });
   
   const fetch_data = async () => {
-    try {
-      setNotification(await getNotification({setShowPopup, slug}))
-    } catch(e) {
-      handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-    } finally {
-      setLoading(false)
-    }
+    setNotification(slug)
   }
 
   useEffect(() => {
     fetch_data()
-    import('@/css/notification/index.css')
+    import('@/css/user/notification/index.css')
   }, [])
 
   if(loading) {
@@ -31,10 +35,10 @@ const Notification = ({setShowPopup}) => {
   }
   return (
     <>
-      <Container size={'-lg'}>
+      <Container size={'-lg'} marginTop={4}>
         <Card addClass={'shadow p-4'} >
-          <h1 className="text-center mb-5">{notification?.title}</h1>
-          <div dangerouslySetInnerHTML={{ __html: notification?.content}}></div>
+          <h1 className="text-center mb-5">{notification?.getNotification?.title}</h1>
+          <div dangerouslySetInnerHTML={{ __html: notification?.getNotification?.content}}></div>
         </Card>
       </Container>
     </>

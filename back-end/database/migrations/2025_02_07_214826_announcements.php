@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('announcements', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->string('slug')->unique();
             $table->text('content');
             // target_audience itu adalah leader_id nya, jadi target audiencenya si bawahannya leader ini
             $table->unsignedBigInteger('target_audience')->nullable();

@@ -6,6 +6,7 @@ use App\Models\Announcement;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\AnnouncementResource;
 
 class AnnouncementController extends Controller
 {
@@ -14,7 +15,11 @@ class AnnouncementController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Announcements successfully gotten',
+            'data' => AnnouncementResource::collection(Announcement::with('user')->get())
+        ], 200);
     }
 
     /**
@@ -51,16 +56,34 @@ class AnnouncementController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($slug)
     {
-        //
+        $announcement = Announcement::with('user')->firstWhere('slug', $slug);
+        if(!$announcement) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Pengumuman tidak ditemukan'
+            ], 404);
+        }
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Announcements successfully gotten',
+            'data' => new AnnouncementResource($announcement)
+        ], 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Announcement $announcement)
+    public function update(Request $request, $slug)
     {
+        $announcement = Announcement::firstWhere('slug', $slug);
+        if(!$announcement) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement not found'
+            ], 404);
+        }
         $validator = Validator::make($request->all(), [
             'target_audience' => 'integer|exists:divisions,id',
             'status' => 'prohibited'
@@ -76,6 +99,8 @@ class AnnouncementController extends Controller
 
         $data = $request->all();
 
+        $data['status'] = 'pending';
+
         $announcement->update($data);
 
         return response()->json([
@@ -87,8 +112,15 @@ class AnnouncementController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Announcement $announcement)
+    public function destroy($slug)
     {
+        $announcement = Announcement::firstWhere('slug', $slug);
+        if(!$announcement) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Announcement not found'
+            ], 404);
+        }
         $announcement->delete();
         return response()->json([
             'status' => 'successful',

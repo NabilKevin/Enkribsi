@@ -1,0 +1,14 @@
+.bi-person-fill {
+  width: 200px;
+  height: 200px;
+}
+
+@media screen and (max-width: 950px) {
+  .bi-person-fill {
+    width: 150px;
+    height: 150px;
+  }
+  .container-lg * {
+    font-size: .8rem;
+  }
+}

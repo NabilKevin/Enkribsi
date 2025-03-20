@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Office;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\Announcement;
+use App\Http\Resources\OfficeResource;
 use Illuminate\Support\Facades\Validator;
 
 class OfficeController extends Controller
@@ -15,7 +15,11 @@ class OfficeController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Offices successfully gotten',
+            'data' => OfficeResource::collection(Office::all())
+        ], 200);
     }
 
     /**
@@ -28,6 +32,7 @@ class OfficeController extends Controller
             'latitude' => 'numeric|required',
             'longitude' => 'numeric|required',
             'radius' => 'required',
+            'work_type' => 'required|in:wfh,wfa,wfo',
             'status' => 'prohibited'
         ]);
 
@@ -53,19 +58,38 @@ class OfficeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Office $office)
+    public function show($id)
     {
-        //
+        $office = Office::find($id);
+        if(!$office) {
+            return response()->json([
+                'message' => 'Kantor tidak ditemukan',
+                'status' => 'unsuccessful'
+            ], 404);
+        }
+        return response()->json([
+            'message' => 'Berhasil mendapatkan kantor',
+            'status' => 'success',
+            'data' => $office->only(['name', 'work_type', 'latitude', 'longitude', 'radius'])
+        ], 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Office $office)
+    public function update(Request $request, $id)
     {
+        $office = Office::find($id);
+        if(!$office) {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => 'Office not found'
+            ], 404);
+        }
         $rule = [
             'latitude' => 'numeric',
             'longitude' => 'numeric',
+            'work_type' => 'in:wfh,wfa,wfo',
             'status' => 'prohibited'
         ];
 
@@ -84,6 +108,8 @@ class OfficeController extends Controller
 
         $data = $request->all();
 
+        $data['status'] = 'pending';
+
         $office->update($data);
 
         return response()->json([
@@ -95,22 +121,20 @@ class OfficeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-        $announcement = Announcement::find($id);
-
-        if(! $announcement) {
+        $office = Office::find($id);
+        if(!$office) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => 'Announcement not found'
+                'message' => 'Office not found'
             ], 404);
         }
-
-        $announcement->delete();
+        $office->delete();
 
         return response()->json([
             'status' => 'successful',
-            'message' => 'Announcement successfully deleted'
+            'message' => 'Office successfully deleted'
         ], 200);
     }
 }

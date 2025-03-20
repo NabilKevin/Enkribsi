@@ -1,12 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
+import UserService from '@/services/UserService';
+import { Webcam, Loading, Container } from "@/components";
 import { useEffect, useRef, useState } from "react"
-import { Webcam, FormAbsen } from "@/components";
-import { handleInPopup } from '@/utils/Popup';
+import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import { checkPermission } from '@/utils/Permission';
-import { getOffices, getLocation, checkLocation, handleSubmitAbsen } from '@/utils/Api';
+import { handleInPopup } from '@/utils/Popup';
 import { stopWebcam } from '@/utils/Webcam';
-import { Loading, Container } from "@/components";
+import { Form } from "@/components/User/Absen";
 
 const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   const [webcamStream, setWebcamStream] = useState(null);
@@ -14,10 +15,9 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   const [page, setPage] = useState(1)
   const [grant, setGrant] = useState({location: false, webcam: false});
   const [loading, setLoading] = useState(true)
-  const [offices, setOffices] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [data, setData] = useState({
-    work_type: '',
+  const [formData, setFormData] = useState({
+    work_type: 'wfo',
     office: '',
     lat: '',
     lon: '',
@@ -25,7 +25,14 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
   })
   const videoRef = useRef(null);
   const canvasRef = useRef(null)
+  const [offices, setOffices] = useState([])
 
+  const handleChange = e => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
   const checkLocationPermission = async () => {
     const callback = () => {
       setGrant(prev => ({...prev, location: true}))
@@ -38,75 +45,120 @@ const Absen = ({setShowNotificationButton, setShowPopup, children}) => {
     }
     await checkPermission({name: 'camera', permitType: 'kamera', setShowPopup, callback})
   }
-
   const checkAllPermission = async () => {
     await checkLocationPermission()
     await checkWebcamPermission()
   }
+  
+  const handleSuccessSubmit = () => {
+    handleStopWebcam()
+    location.replace('/')
+  }
+  const handleChangeWorkType = (data, work_type) => [...data].map(dat => dat.work_type === work_type ? dat : null).filter(dat => dat)
+  
+  const handleErrorSubmit = (e) => {
+    setIsSubmitting(false)
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+  }
+
+  const handleError = e => {
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+  }
+
+  const handleSuccessCheckLocation = () => {
+    setPage(2)
+  }
+
+  const { data, singleExecute } = useMultipleFetch({fetchs: [UserService.handleSubmitAbsen, UserService.getOffices, UserService.checkLocation], setLoading, 
+    errorCallbackMap: {
+      getOffices: handleError,
+      checkLocation: handleError,
+      handleSubmitAbsen: handleErrorSubmit
+    }, 
+    successCallbackMap: {
+      checkLocation: handleSuccessCheckLocation,
+      handleSubmitAbsen: handleSuccessSubmit
+  }});
 
   const handleSubmit = async e => {
-    await handleSubmitAbsen({e, setIsSubmitting, setShowPopup, data, callback: () => {
-      handleStopWebcam()
-      location.replace('/')
-    }})
+    e.preventDefault()
+    if(!formData || Object.keys(formData).length === 0) {
+      return handleInPopup({title: 'Peringatan!', content: 'Tidak ada data yang diberi!', setShowPopup})
+    }
+    setIsSubmitting(true)
+    singleExecute('handleSubmitAbsen', formData)
   }
 
   const handleCheckLocation = async e => {
-    const obj = await checkLocation({
-      ifSuccess: () => setPage(2),
-      e, data, setShowPopup
+    e.preventDefault();
+    const tempFormData = {};
+    [...e.target].forEach(element => {
+      if(element.value && element.name) {
+        formData[element.name] = element.name.toLowerCase() === 'office' ? parseInt(element.value) : element.value
+      }
     })
+  
+    tempFormData['lat'] = formData.lat 
+    tempFormData['lon'] = formData.lon 
 
-    for(const key in obj) {
-      setData(prev => ({
+    singleExecute('checkLocation', e, formData)
+
+    for(const key in formData) {
+      setFormData(prev => ({
         ...prev,
-        [key]: obj[key]
+        [key]: formData[key]
       }))
     }
   }
-
   const handleStopWebcam = () => {
     stopWebcam({webcamStream, setWebcamStream})
   }
-
   const fetch_data = async () => {
     checkAllPermission()
-    try {
-      setOffices(await getOffices({setShowPopup}))
-    } catch(e) {
-      handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
-    } finally {
-      setLoading(false)
+    singleExecute('getOffices')
+  }
+  const isAbsen = async () => {
+    const data = await UserService.getAttendance()
+    
+    if(data) {
+      location.replace('/')
     }
   }
 
   useEffect(() => {
+    isAbsen()
     fetch_data()
     setShowNotificationButton(false)
   }, [])
   useEffect(() => {
     if(grant?.location) {
-      getLocation({setShowPopup, callback: setData})
+      UserService.getLocation({setShowPopup, callback: setFormData})
     }
   }, [grant])
-
   useEffect(() => {
-    setData(prev => ({
+    setFormData(prev => ({
       ...prev,
       image: imageSrc
     }))
   }, [imageSrc])
+  useEffect(() => {
+    if(data.getOffices) {
+      const office = handleChangeWorkType(data.getOffices, formData.work_type)
+      setOffices(office)
+      setFormData(prev => ({...prev, office: office.length > 0 ? office[0].id : null}))
+    }
+  }, [data.getOffices, formData.work_type])
+
+  if(loading) {
+    return <Loading />
+  }
 
   return (
     <>
-      {loading ? <Loading /> :
-        <>
-        {children}
-        <Container>
-          { page === 1 ? <FormAbsen grant={grant} offices={offices} handleCheckLocation={handleCheckLocation} /> : <Webcam isSubmitting={isSubmitting} imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} handleStopWebcam={handleStopWebcam} />}
-        </Container>
-        </>
-      } 
+    {children}
+    <Container size={'-lg'} marginTop={5}>
+      { page === 1 ? <Form formData={formData} handleChange={handleChange} grant={grant} offices={offices} handleCheckLocation={handleCheckLocation} /> : <Webcam isSubmitting={isSubmitting} imageSrc={imageSrc} canvasRef={canvasRef} videoRef={videoRef} setWebcamStream={setWebcamStream} setImageSrc={setImageSrc} webcamStream={webcamStream} handleSubmit={handleSubmit} handleStopWebcam={handleStopWebcam} />}
+    </Container>
     </>
   )
 }

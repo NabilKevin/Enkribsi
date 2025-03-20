@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\ScheduleController;
-use App\Http\Controllers\WfaWfhScheduleController;
-use Illuminate\Http\Request;
 use App\Http\Middleware\isHR;
 use App\Http\Middleware\isBOD;
 use App\Http\Middleware\isAdmin;
@@ -16,7 +14,10 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\HrController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\WfhScheduleController;
 use App\Http\Middleware\jwtMiddleware;
+use App\Http\Middleware\isNotAdmin;
+use App\Http\Middleware\isWeekend;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -31,23 +32,22 @@ Route::middleware('guest')->group(function () {
     });
 });
 
-
-
 Route::middleware(jwtMiddleware::class)->group(function () {
     Route::prefix('admin')->middleware(isAdmin::class)->group(function() {
         Route::get('/bods', [AdminController::class, 'getBods']);
         Route::resource('employees', AdminController::class);
     });
     Route::prefix('hr')->middleware(isHR::class)->group(function() {
-        Route::get('/permit/today', [HrController::class, 'getTodayPermits']);
+        Route::get('/permits/today', [HrController::class, 'getTodayPermits']);
         Route::get('/employees', [HrController::class, 'getEmployees']);
-        Route::get('/employees/{id}', [HrController::class, 'getEmployee']);
-        Route::get('/attendances', [HrController::class, 'getAttendances']);
+        Route::get('/employees/{username}/attendance', [HrController::class, 'getEmployeeAttendance']);
+        Route::get('/employees/attendance', [HrController::class, 'getAttendances']);
         Route::post('/report', [HrController::class, 'makeReport']);
+        Route::get('/audiences', [HrController::class, 'getAudiences']);
         Route::resource('offices', OfficeController::class);
         Route::resource('schedules', ScheduleController::class);
         Route::resource('announcements', AnnouncementController::class);
-        Route::resource('wfawfhschedules', WfaWfhScheduleController::class);
+        Route::resource('wfh/schedules', WfhScheduleController::class);
     });
     Route::prefix('bod')->middleware(isBOD::class)->group(function() {
         Route::post('/permit/approve/{id}', [BodController::class, 'approvePermit']);
@@ -57,45 +57,42 @@ Route::middleware(jwtMiddleware::class)->group(function () {
         Route::post('/schedule/approve/{id}', [BodController::class, 'approveSchedule']);
         route::post('/schedule/deny/{id}', [BodController::class, 'denySchedule']);
         Route::get('/schedule/pendings', [BodController::class, 'getPendingSchedules']);
-        route::delete('/schedule/delete/{id}', [BodController::class, 'destroySchedule']);
 
         Route::post('/announcement/approve/{id}', [BodController::class, 'approveAnnouncement']);
         route::post('/announcement/deny/{id}', [BodController::class, 'denyAnnouncement']);
         Route::get('/announcement/pendings', [BodController::class, 'getPendingAnnouncements']);
-        route::delete('/announcement/delete/{id}', [BodController::class, 'destroyAnnouncement']);
 
         Route::post('/office/approve/{id}', [BodController::class, 'approveOffice']);
         route::post('/office/deny/{id}', [BodController::class, 'denyOffice']);
         Route::get('/office/pendings', [BodController::class, 'getPendingOffices']);
-        route::delete('/office/delete/{id}', [BodController::class, 'destroyOffice']);
-
-        Route::post('/wfah/approve/{id}', [BodController::class, 'approveWFH']);
-        route::post('/wfah/deny/{id}', [BodController::class, 'denyWFH']);
-        Route::get('/wfah/pendings', [BodController::class, 'getPendingWFHs']);
-        route::delete('/wfah/delete/{id}', [BodController::class, 'destroyWFH']);
 
         Route::get('/statistics', [BodController::class, 'getStatistics']);
     });
 
+    Route::middleware(isNotAdmin::class)->group(function() {
+        Route::middleware(isWeekend::class)->group(function() {
+            Route::post('/checklocation', [AbsenController::class, 'checkLocation'] );
+            Route::post('/checkschedulewfh', [AbsenController::class, 'checkScheduleWfh']);
+            Route::post('/absent', [AbsenController::class, 'absent']);
+            Route::post('/permit', [AbsenController::class, 'storePermit']);
+            Route::post('/permit/cancel/{id}', [AbsenController::class, 'cancelPermit']);
+            Route::post('/leave', [AbsenController::class, 'leave']);
+            Route::get('/attendance', [AbsenController::class, 'getAttendance']);
+            Route::get('/offices', [AbsenController::class, 'getOffices']);
+        });
+
+        Route::get('/permits', [AbsenController::class, 'getPermits']);
+        Route::get('/presences/count', [AbsenController::class, 'getPresencesCount']);
+        Route::get('/presences', [AbsenController::class, 'getPresences']);
+
+        Route::post('/addphoto', [UserController::class, 'addPhotoProfile']);
+        Route::get('/me', [UserController::class, 'me']);
+
+        Route::get('/notifications/count', [NotificationController::class, 'getNotificationsCount']);
+        Route::get('/notifications', [NotificationController::class, 'getNotifications']);
+        Route::get('/notifications/{slug}', [NotificationController::class, 'getNotification']);
+        Route::post('/notifications', [NotificationController::class, 'deleteNotifications']);
+    });
+
     Route::post('/auth/logout', [AuthController::class, 'logout']);
-
-    Route::post('/checklocation', [AbsenController::class, 'checkLocation']);
-    Route::post('/checkschedulewfah', [AbsenController::class, 'checkScheduleWfah']);
-    Route::post('/absent', [AbsenController::class, 'absent']);
-    Route::post('/permit', [AbsenController::class, 'storePermit']);
-    Route::post('/permit/cancel/{id}', [AbsenController::class, 'cancelPermit']);
-    Route::post('/leave', [AbsenController::class, 'leave']);
-    Route::get('/presences', [AbsenController::class, 'getPresences']);
-    Route::get('/presence', [AbsenController::class, 'getPresence']);
-    Route::get('/attendance', [AbsenController::class, 'getAttendance']);
-    Route::get('/permits', [AbsenController::class, 'getPermits']);
-    Route::get('/offices', [AbsenController::class, 'getOffices']);
-
-    Route::post('/addphoto', [UserController::class, 'addPhotoProfile']);
-    Route::get('/me', [UserController::class, 'me']);
-
-    Route::get('/notifications/count', [NotificationController::class, 'getNotificationsCount']);
-    Route::get('/notifications', [NotificationController::class, 'getNotifications']);
-    Route::get('/notifications/{slug}', [NotificationController::class, 'getNotification']);
-    Route::post('/notifications', [NotificationController::class, 'deleteNotifications']);
 });

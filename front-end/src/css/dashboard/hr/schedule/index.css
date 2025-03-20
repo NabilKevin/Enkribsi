@@ -1,0 +1,26 @@
+@media screen and (max-width: 750px) {
+  .header-text-schedule a {
+    font-size: 14px;
+  } 
+  .header-text-schedule h2 {
+    font-size: 20px;
+  } 
+}
+@media screen and (max-width: 450px) {
+  .header-text-schedule {
+    flex-direction: column;
+    align-items: start !important;
+  } 
+  .header-text-schedule a {
+    width: 100%;
+    margin-top: .75rem;
+  } 
+}
+
+.btn-action-schedule {
+  padding: 6px 8px;
+}
+
+.react-datepicker-wrapper *, .react-datepicker-wrapper  {
+  width: 100% !important;
+}

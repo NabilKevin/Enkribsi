@@ -12,7 +12,6 @@ use App\Models\Attendance;
 use App\Models\Announcement;
 use App\Models\Notification;
 use Illuminate\Http\Request;
-use App\Models\WfaWfhSchedule;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 class BodController extends Controller
@@ -133,14 +132,14 @@ class BodController extends Controller
         if($absent) {
             $absent->update([
                 'status' => $permit->permit_type === 'sakit' ? 'izin' : $permit->permit_type,
-                'check_out_time' => $permit->permit_type === 'sakit' || $permit->permit_type === 'izin' ? Carbon::now()->toTimeString() : null
+                'check_out_time' => in_array($permit->permit_type, ['izin', 'sakit']) ? Carbon::now()->toTimeString() : null
             ]);
         } else {
-            if(Carbon::parse($permit->date)->isToday()) {
+            if(Carbon::parse($permit->date)->isToday() && in_array($permit->permit_type, ['izin', 'sakit'])) {
                 Attendance::create([
                     'user_id' => $permit->user_id,
                     'date' => Carbon::now()->toDateString(),
-                    'status' => $permit->permit_type === 'sakit' ? 'izin' : $permit->permit_type
+                    'status' => 'izin'
                 ]);
             }
         }
@@ -266,26 +265,6 @@ class BodController extends Controller
             'data' => $announcement
         ], 200);
     }
-
-    public function destroyAnnouncement(Request $request, $id)
-    {
-        $announcement = Announcement::find($id);
-
-        if(! $announcement) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Announcement not found'
-            ], 404);
-        }
-
-        $announcement->delete();
-
-        return response()->json([
-            'status' => 'successful',
-            'message' => 'Announcement successfully deleted'
-        ], 200);
-    }
-
     public function getPendingSchedules()
     {
         $schedule = Schedule::where('status', 'pending')->get();
@@ -314,24 +293,6 @@ class BodController extends Controller
             'status' => 'successful',
             'message'=> 'Schedule successfully approved',
             'data' => $schedule
-        ], 200);
-    }
-    public function destroySchedule(Request $request, $id)
-    {
-        $schedule = Schedule::find($id);
-
-        if(! $schedule) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Schedule not found'
-            ], 404);
-        }
-
-        $schedule->delete();
-
-        return response()->json([
-            'status' => 'successful',
-            'message' => 'Schedule successfully deleted'
         ], 200);
     }
     public function denySchedule(Request $request, $id)
@@ -444,120 +405,6 @@ class BodController extends Controller
             'status' => 'successful',
             'message' => 'Office successfully denied',
             'data' => $Office
-        ], 200);
-    }
-    public function destroyOffice(Request $request, $id)
-    {
-        $office = Office::find($id);
-
-        if(!$office) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Office not found'
-            ], 404);
-        }
-
-        $office->delete();
-
-        return response()->json([
-            'status' => 'successful',
-            'message' => 'Office successfully deleted'
-        ], 200);
-    }
-
-    public function getPendingWFHs()
-    {
-        $wfaWfhSchedule = WfaWfhSchedule::where('status', 'pending')->get();
-        return response()->json([
-            'status'=> 'successful',
-            'message'=> 'Successfully get pending wfaWfhSchedule',
-            'data'=> $wfaWfhSchedule,
-        ], 200);
-    }
-    public function approveWFH(Request $request, $id)
-    {
-        $WfhWfhSchedule = wfaWfhSchedule::find($id);
-
-        if (!$WfhWfhSchedule) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Schedule not found'
-            ], 404);
-        }
-
-        if ($WfhWfhSchedule->status === 'approved') {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Schedule has already been approved'
-            ], 403);
-        }
-        if ($WfhWfhSchedule->status === 'denied') {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Schedule has already been denied'
-            ], 403);
-        }
-
-        $WfhWfhSchedule->update([
-            'status' => 'approved'
-        ]);
-
-        return response()->json([
-            'status' => 'successful',
-            'message' => 'Schedule successfully approved',
-            'data' => $WfhWfhSchedule
-        ], 200);
-    }
-    public function denyWFH(Request $request, $id)
-    {
-        $WfaWfhSchedule = WfaWfhSchedule::find($id);
-
-        if (!$WfaWfhSchedule) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'WFA/WFH not found'
-            ], 404);
-        }
-
-        if ($WfaWfhSchedule->status === 'approved') {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'WFA/WFH has already been approved'
-            ], 403);
-        }
-        if ($WfaWfhSchedule->status === 'denied') {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'WFA/WFH has already been denied'
-            ], 403);
-        }
-
-        $WfaWfhSchedule->update([
-            'status' => 'denied'
-        ]);
-
-        return response()->json([
-            'status' => 'successful',
-            'message' => 'WFA/WFH successfully denied',
-            'data' => $WfaWfhSchedule
-        ], 200);
-    }
-    public function destroyWfh(Request $request, $id)
-    {
-        $wfaWfhSchedule = WfaWfhSchedule::find($id);
-
-        if(!$wfaWfhSchedule) {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Wfa/Wfh schedule not found'
-            ], 404);
-        }
-
-        $wfaWfhSchedule->delete();
-
-        return response()->json([
-            'status' => 'successful',
-            'message' => 'Wfa/Wfh schedule successfully deleted'
         ], 200);
     }
 

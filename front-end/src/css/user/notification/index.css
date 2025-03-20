@@ -1,0 +1,9 @@
+.card {
+  height: 71vh;
+}
+
+@media screen and (max-height: 100vh) {
+  .container-lg {
+    margin-bottom: 0 !important;
+  }
+}

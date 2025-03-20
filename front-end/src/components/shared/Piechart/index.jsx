@@ -7,7 +7,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const PieChart = ({statistics}) => {
   useEffect(() => {
-    import('@/css/piechart/index.css')
+    import('@/css/chart/index.css')
   }, [])
   const labels = ['Hadir', 'Izin', 'Telat', 'Alfa']
   const data = {

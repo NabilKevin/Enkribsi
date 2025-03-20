@@ -8,9 +8,10 @@ use App\Models\Office;
 use App\Models\Permit;
 use App\Models\Division;
 use App\Models\Attendance;
+use App\Models\Schedule;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Models\WfaWfhSchedule;
+use App\Models\WfhSchedule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -63,7 +64,7 @@ class AbsenController extends Controller
         }
     }
 
-    public function checkScheduleWfah(Request $request)
+    public function checkScheduleWfh(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'office' => 'required|int|exists:offices,id'
@@ -76,53 +77,18 @@ class AbsenController extends Controller
             ], 422);
         }
         $now = Carbon::now()->toDateString();
-        $schedule = WfaWfhSchedule::where('office_id', $request->office)->where('start_date', '>=', $now)->where('end_date', '<=', $now)->firstWhere('status', 'active');
-        $permit = Permit::whereIn('permit_type', ['wfa', 'wfh'])->firstWhere('date',$now);
+        $schedule = WfhSchedule::where('start_date', '<=', $now)->where('end_date', '>=', $now)->firstWhere('status', 'active');
+        $permit = Permit::where('permit_type', 'wfh')->firstWhere('date',$now);
         if($schedule || $permit) {
-            if($request->work_type === 'wfh') {
-                if($permit) {
-                    if($permit->permit_type === 'wfa') {
-                        return response()->json([
-                            'status' => 'unsuccessful',
-                            'message' => "Kamu izin untuk WFA hari ini"
-                        ], 403);
-                    }
-                }
-                if($schedule) {
-                    if($schedule->type === 'wfa') {
-                        return response()->json([
-                            'status' => 'unsuccessful',
-                            'message' => "Hari ini jadwalnya untuk WFA"
-                        ], 403);
-                    }
-                }
-            } else {
-                if($permit) {
-                    if($permit->permit_type === 'wfh') {
-                        return response()->json([
-                            'status' => 'unsuccessful',
-                            'message' => "Kamu izin untuk WFH hari ini"
-                        ], 403);
-                    }
-                }
-                if($schedule) {
-                    if($schedule->type === 'wfh') {
-                        return response()->json([
-                            'status' => 'unsuccessful',
-                            'message' => "Hari ini jadwalnya untuk WFH"
-                        ], 403);
-                    }
-                }
-            }
             return response()->json([
                 'status' => 'successful',
-                'message' => 'Kamu bisa WFA/WFH hari ini',
+                'message' => 'Kamu bisa WFH hari ini',
                 'schedule' => $schedule
             ], 200);
         }
         return response()->json([
             'status' => 'unsuccessful',
-            'message' => "Kamu tidak bisa WFA/WFH hari ini"
+            'message' => "Kamu tidak bisa WFH hari ini"
         ], 403);
     }
 
@@ -150,6 +116,15 @@ class AbsenController extends Controller
             ], 403);
         }
 
+        $office = Office::find($request->office);
+
+        if($office->status !== 'active') {
+            return response()->json([
+                'status' => 'unsuccessful',
+                'message' => "Kantor tidak aktif"
+            ], 422);
+        }
+
         $isAbsent = Attendance::where('user_id', $request->user()->id)
             ->where('date', Carbon::now()->toDateString())
             ->first();
@@ -170,49 +145,15 @@ class AbsenController extends Controller
             ], 403);
         }
 
-        if(in_array($request->work_type, ['wfa', 'wfh'])) {
+        if($request->work_type=== 'wfh') {
             $now = Carbon::now()->toDateString();
-            $schedule = WfaWfhSchedule::where('office_id', $request->office)->where('start_date', '>=', $now)->where('end_date', '<=', $now)->firstWhere('status', 'active');
-            if((!$permit || ($permit && in_array($permit->permit_type, ['izin', 'sakit']))) && !$schedule) {
+            $schedule = WfhSchedule::where('start_date', '<=', $now)->where('end_date', '>=', $now)->firstWhere('status', 'active');
+
+            if(!$permit && !$schedule) {
                 return response()->json([
                     'status' => 'unsuccessful',
-                    'message' => "Kamu tidak bisa WFA/WFH hari ini"
+                    'message' => "Kamu tidak bisa WFH hari ini"
                 ], 403);
-            }
-            if($request->work_type === 'wfh') {
-                if($permit) {
-                    if($permit->permit_type === 'wfa') {
-                        return response()->json([
-                            'status' => 'unsuccessful',
-                            'message' => "Kamu izin untuk WFA hari ini"
-                        ], 403);
-                    }
-                }
-                if($schedule) {
-                    if($schedule->type === 'wfa') {
-                        return response()->json([
-                            'status' => 'unsuccessful',
-                            'message' => "Hari ini jadwalnya untuk WFA"
-                        ], 403);
-                    }
-                }
-            } else {
-                if($permit) {
-                    if($permit->permit_type === 'wfh') {
-                        return response()->json([
-                            'status' => 'unsuccessful',
-                            'message' => "Kamu izin untuk WFH hari ini"
-                        ], 403);
-                    }
-                }
-                if($schedule) {
-                    if($schedule->type === 'wfh') {
-                        return response()->json([
-                            'status' => 'unsuccessful',
-                            'message' => "Hari ini jadwalnya untuk WFH"
-                        ], 403);
-                    }
-                }
             }
         }
 
@@ -233,10 +174,11 @@ class AbsenController extends Controller
             $absent = Attendance::create([
                 'user_id' => $request->user()->id,
                 'date' => Carbon::now()->toDateString(),
+                'check_in_date' => Carbon::now()->toDateString(),
                 'check_in_time' => Carbon::now()->toTimeString(),
                 'work_type' => $request->work_type,
-                'user_latitude' => $request->lat,
-                'user_longitude' => $request->lon,
+                'check_in_latitude' => $request->lat,
+                'check_in_longitude' => $request->lon,
                 'office_id'=>$request->office
             ]);
             return response()->json([
@@ -258,7 +200,7 @@ class AbsenController extends Controller
             'reason' => 'required|string',
             'permit_type' => 'required|string',
             'date' => 'date|required',
-            'office_id' => 'required|int|exists:offices,id',
+            'office_id' => 'required_if:permit_type,wfh|int|exists:offices,id',
         ]);
 
         if($validator->fails()) {
@@ -287,10 +229,10 @@ class AbsenController extends Controller
         }
 
         if(Carbon::now()->toDateString() === Carbon::parse($data['date'])->toDateString()) {
-            if(in_array($data['permit_type'], ['wfh', 'wfa'])) {
+            if($data['permit_type'] === 'wfh') {
                 return response()->json([
                     'status' => 'unsuccessful',
-                    'message' => "WFH/WFA requests must be submitted at least one day in advance"
+                    'message' => "Permintaan WFH harus diajukan setidaknya satu hari sebelumnya"
                 ], 403);
             }
 
@@ -321,7 +263,7 @@ class AbsenController extends Controller
             'permit_type' => $data['permit_type'],
             'leader_id' => $request->user()->leader_id,
             'date' => $data['date'],
-            'office_id' => $data['office_id']
+            'office_id' => isset($data['office_id']) ? $data['office_id'] : null
         ]);
 
         return response()->json([
@@ -334,9 +276,8 @@ class AbsenController extends Controller
     public function leave(Request $request)
     {
         $attendance = Attendance::with(['office.schedules'])->where('user_id', $request->user()->id)
-            ->where('date', Carbon::now()->toDateString())
             ->where('status', 'absen')
-            ->first();
+            ->firstWhere('check_out_time', null);
 
         if(!$attendance) {
             return response()->json([
@@ -345,7 +286,7 @@ class AbsenController extends Controller
             ], 403);
         }
 
-        if(!Carbon::now()->gt($attendance->office->schedules->firstWhere('status', 'active')->check_out_time)) {
+        if(!Carbon::now()->gt($attendance->date) && !Carbon::now()->gt($attendance->office->schedules->firstWhere('status', 'active')->check_out_time)) {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => "Kamu tidak bisa pulang sebelum waktu pulang"
@@ -354,17 +295,19 @@ class AbsenController extends Controller
 
         $attendance->update([
             'status' => 'pulang',
-            'check_out_time' => Carbon::now()->toTimeString()
+            'check_out_time' => Carbon::now()->toTimeString(),
+            'check_out_date' => Carbon::now()->toDateString(),
+            'check_out_latitude' => $request->lat,
+            'check_out_longitude' => $request->lon,
         ]);
 
         return response()->json([
             'status' => 'successful',
-            'message' => 'Success leave',
-            'data' => $attendance
+            'message' => 'Selamat beristirahat'
         ], 200);
     }
 
-    public function getPresences(Request $request)
+    public function getPresencesCount(Request $request)
     {
         $absent = Attendance::where('user_id', $request->user()->id)->whereNotIn('status', ['izin', 'alfa'])->where('work_type', '!=', null)->get();
         $permit = Permit::where('user_id', $request->user()->id)->where('date', '<=', Carbon::now()->toDateString())->get();
@@ -381,6 +324,7 @@ class AbsenController extends Controller
         return response()->json([
             'status' => 'successful',
             'message' => 'Success get presence',
+            'id' => $request->user()->id,
             'data' => [
                 'hadir' => Count($absent),
                 'izin' => Count($permit),
@@ -390,63 +334,52 @@ class AbsenController extends Controller
         ], 200);
     }
 
-    public function getPresence(Request $request)
+    public function getPresences(Request $request)
     {
-        $presence = $request->query('presence');
-        if($presence === 'hadir') {
-            $absent = Attendance::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('work_type', '!=', null)->whereNotIn('status', ['izin', 'alfa'])->limit(50)->get();
-            return response()->json([
-                'status' => 'successful',
-                'message' => 'Success get presence',
-                'data' => $absent->sortBy('date', SORT_NATURAL, false)->values()
-            ], 200);
-        } elseif($presence === 'izin') {
-            $permit = Permit::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('status', 'approved')->where('date', '<=', Carbon::now()->toDateString())->get();
-            return response()->json([
-                'status' => 'successful',
-                'message' => 'Success get presence',
-                'data' => $permit->sortBy('date', SORT_NATURAL, false)->values()
-            ], 200);
-        } elseif($presence === 'alfa') {
-            $alfa = Attendance::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('status', 'alfa')->get();
-            return response()->json([
-                'status' => 'successful',
-                'message' => 'Success get presence',
-                'data' => $alfa->sortBy('date', SORT_NATURAL, false)->values()
-            ], 200);
-        } elseif($presence === 'telat') {
-            $telat = Attendance::with(['office.schedules'])->orderBy('date', 'desc')->where('user_id', $request->user()->id)->whereNotIn('status',['izin', 'alfa'])->where('work_type', '!=', null)->get();
-            $telat = $telat->map(function($value) {
-                $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->check_in_time);
-                $time2 = Carbon::parse($value->check_in_time);
-                if($time2->gt($time)) {
-                    $value['check_in_time_schedule'] = $time->toTimeString();
-                    $value->makeHidden(['office']);
-                    return $value;
-                }
-            })->filter();
-            return response()->json([
-                'status' => 'successful',
-                'message' => 'Success get presence',
-                'data' => $telat->sortBy('date', SORT_NATURAL, false)->values()
-            ], 200);
-        } else {
-            return response()->json([
-                'status' => 'unsuccessful',
-                'message' => 'Invalid presence'
-            ], 422);
-        }
+        $absent = Attendance::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('work_type', '!=', null)->whereNotIn('status', ['izin', 'alfa'])->limit(50)->get();
+
+        $permit = Permit::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('status', 'approved')->where('date', '<=', Carbon::now()->toDateString())->get();
+
+        $alfa = Attendance::orderBy('date', 'desc')->where('user_id', $request->user()->id)->where('status', 'alfa')->get();
+
+        $telat = Attendance::with(['office.schedules'])->orderBy('date', 'desc')->where('user_id', $request->user()->id)->whereNotIn('status',['izin', 'alfa'])->where('work_type', '!=', null)->get();
+        $telat = $telat->map(function($value) {
+            $time = Carbon::parse($value->office->schedules->firstWhere('status' , 'active')->check_in_time);
+            $time2 = Carbon::parse($value->check_in_time);
+            if($time2->gt($time)) {
+                $value['check_in_time_schedule'] = $time->toTimeString();
+                $value->makeHidden(['office']);
+                return $value;
+            }
+        })->filter();
+
+        return response()->json([
+            'status' => 'successful',
+            'message' => 'Success get presences',
+            'data' => [
+                'hadir' => $absent->sortBy('date', SORT_NATURAL, false)->values(),
+                'izin' => $permit->sortBy('date', SORT_NATURAL, false)->values(),
+                'alfa' => $alfa->sortBy('date', SORT_NATURAL, false)->values(),
+                'telat' => $telat->sortBy('date', SORT_NATURAL, false)->values(),
+            ]
+        ], 200);
     }
 
     public function getAttendance(Request $request)
     {
         $absent = Attendance::with(['office.schedules' => function ($query) {
             $query->where('status', 'active')->limit(1);
-        }])->where('user_id', $request->user()->id)->firstWhere('date', Carbon::now()->toDateString());
+        }])->where('user_id', $request->user()->id)
+            ->where('status', 'absen')
+            ->where(function ($query) {
+                $query->whereNull('check_out_time')
+                    ->orWhere('date', Carbon::now()->toDateString());
+            })
+            ->first();
         if(!$absent) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => "You haven't been absent today"
+                'message' => "Kamu belum absen hari ini!",
             ], 404);
         }
         return response()->json([
@@ -505,8 +438,8 @@ class AbsenController extends Controller
     {
         return response()->json([
             'status' => 'successful',
-            'message' => 'Permit successfuly added',
-            'data' => Office::all()
+            'message' => 'Successfuly get offices',
+            'data' => Office::where('status', 'active')->get()
         ], 200);
     }
 }

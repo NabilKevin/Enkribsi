@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
-const Card = ({children, addClass}) => {
+const Card = ({children, addClass, addClassBody}) => {
   return (
-    <div className={`card ${addClass}`}>
-      <div className="card-body">
+    <div className={`card ${addClass ? addClass : ''}`}>
+      <div className={`card-body ${addClassBody ? addClassBody : ''}`}>
       {children}
       </div>
     </div>
