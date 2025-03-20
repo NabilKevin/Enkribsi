@@ -1,0 +1,37 @@
+[33mdc94b5b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m feat: add profile user and forgot password
+[33m00feb89[m menambahkan profile dan forgot password
+[33m8606528[m feat: add page notification and page notifications
+[33m001ea4e[m feat: add absen page
+[33m742c8ba[m refactor: refactoring BodController and Routes
+[33md77abc0[m Merge branch 'main' of https://github.com/NabilKevin/Enkribsi
+[33m65b89a6[m feat: add homepage and statistics page
+[33me4201c0[m update OfficeController to delete announcements
+[33m554feba[m feat: add Notification Controller
+[33m205c535[m refactor(export): generate Excel file in memory instead of saving to disk
+[33m748c645[m Feat: Add HR Controller
+[33m8d75c69[m feat: add kirim email kalau ada izin yang urgent
+[33m08d1bb6[m feat: add Admin Controller
+[33m7941ad8[m feat: menambahkan fitur untuk cek apakah ada wajah di kamera dan apakah wajah itu menghadap kamera, dan menambahkan fitur lainnya
+[33m9914cba[m feat: adding add photo for absent reference
+[33mf1c3bb2[m feat: add get attendance (absen, izin, pulang, alfa)
+[33mb12bcf3[m feat: add division model, migration, and controller. and add function permit, leave and get presence
+[33m00d62b0[m feat: add new feature absent and add migration
+[33m4c8cecc[m feat: add password reset functionality
+[33m0322667[m refactor(components): delete Register component
+[33mc1de58d[m Merge branch 'main' of https://github.com/NabilKevin/Enkribsi
+[33m0650062[m feat: add register page
+[33m7f8eb4c[m Merge branch 'main' of github.com:NabilKevin/Enkribsi
+[33mafc0814[m feat: add new fitur for Login
+[33m2675620[m Merge branch 'main' of github.com:NabilKevin/Enkribsi
+[33m9ceca7a[m feature: menambahkan AuthController
+[33mb90c730[m Merge branch 'main' of github.com:NabilKevin/Enkribsi
+[33m4ad1c79[m feat: add login page
+[33mc808876[m docs: update README description
+[33m7c26bd7[m Merge branch 'main' of https://github.com/NabilKevin/Enkribsi
+[33m0ad7230[m [feature] python: (#1) add face recognition
+[33me31bafb[m test(test): test commit #2
+[33m7dcaa68[m test(test): test commit
+[33mab60f38[m Test(test): test commit
+[33m5dbbfa1[m test(test): Test commit
+[33m5356a1a[m First
+[33m06d76d3[m first commit

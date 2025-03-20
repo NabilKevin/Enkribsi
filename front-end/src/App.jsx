@@ -10,8 +10,15 @@ import { Route, Routes } from "react-router-dom";
 import axios from "axios";
 import "./css/header/index.css";
 import "./css/main.css";
+import Profile from "./pages/Private/User/Profile";
+import Permit from "./pages/Private/User/Permit";
+import ForgotPassword from "./pages/Private/User/ForgotPassword";
+
 
 function App() {
+  return (
+  <ForgotPassword />
+  )
   axios.defaults.withCredentials = true;
 
   const [showNotificationButton, setShowNotificationButton] = useState()
@@ -20,7 +27,6 @@ function App() {
   const [showPopup, setShowPopup] = useState({show: false, slide: 'in', title: '', content: ''})
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState()
-
   const popupRef = useRef(null)
 
   const path = location.pathname.split('/')[1]
