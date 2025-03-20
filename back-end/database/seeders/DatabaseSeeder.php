@@ -152,7 +152,6 @@ class DatabaseSeeder extends Seeder
                             if($rand === 1 && $ii !== 0) {
                                 Permit::create([
                                     'user_id' => $ii+1,
-                                    'leader_id' => 1,
                                     'office_id' => 1,
                                     'date' => $date,
                                     'permit_type' => 'sakit',

@@ -1,9 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Addphoto, Home, Statistics, Absen, Notifications, Notification, PrivateLayout } from "@/pages/Private/User";
+import { Addphoto, Home, Statistics, Absen, Notifications, Notification, PrivateLayout, Profile, Permits, CreatePermits } from "@/pages/Private/User";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { handleOutPopup, handleClickOutside } from '@/utils/Popup';
 import { Route, Routes } from "react-router-dom";
-import { Login, NotFound } from "@/pages/Public";
+import { Login, NotFound, Forgotpassword } from "@/pages/Public";
 import { 
     DashboardHr, StatisticsHr, StatisticHr, 
     AnnouncementsHr, CreateAnnouncementsHr, SingleAnnouncementsHr, EditAnnouncementsHr,
@@ -12,11 +12,18 @@ import {
     WfhSchedulesHr, CreateWfhSchedulesHr, EditWfhSchedulesHr,
     ProfileHr
  } from "@/pages/Private/Dashboard/Hr";
+import {
+  DashboardBod, DenyFormBod,
+  AnnouncementBod, SingleAnnouncementBod,
+  OfficeBod, ScheduleBod, WfhScheduleBod, ProfileBod, 
+  StatisticBod, StatisticsBod
+} from '@/pages/Private/Dashboard/Bod'
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import { DashboardLayout } from "@/pages/Private/Dashboard/";
 import { Loading, Popup } from "@/components";
 import UserService from "@/services/UserService";
 import HeaderContext from "@/context/HeaderContext";
+import { DashboardAdmin, CreateAdmin, ProfileAdmin, EditAdmin } from '@/pages/Private/Dashboard/Admin'
 
 import axios from "axios";
 import "./css/header/index.css";
@@ -28,11 +35,13 @@ const App = () =>  {
   const [showNotificationButton, setShowNotificationButton] = useState()
   const [isLongClicked, setIsLongClicked] = useState(false)
   const [isForbidden, setIsForbidden] = useState(false)
+  const [dashboardNotfound, setDashboardNotfound] = useState(false)
   const [isNotfound, setIsNotfound] = useState(false)
   const [isHomepage, setIsHomepage] = useState(false)
   const [showPopup, setShowPopup] = useState({show: false, slide: 'in', title: '', content: ''})
   const [onlyLogo, setOnlyLogo] = useState(false)
   const [loading, setLoading] = useState(true)
+
 
   const popupRef = useRef(null)
 
@@ -46,7 +55,7 @@ const App = () =>  {
         if(path !== user.getAuth?.role) {
           setIsForbidden(true)
         } else {
-          if(!isNotfound) {
+          if(!dashboardNotfound) {
             document.body.style.paddingTop = '0px'
             document.body.style.paddingBottom = '0px'
           } else {
@@ -63,16 +72,22 @@ const App = () =>  {
   }
   
   const handleErrorNavigation = () => {
-    if(path !== 'login') {
+    if(path !== 'login' && path !== 'forgotpassword') {
       location.replace('/login');
     }
   }
 
   const handleSuccessNavigation = (user) => {
-    if (shouldNavigateToHome(user)) {
-      location.replace('/');
-    } else if (!user?.face_img && path !== 'addphoto') {
-      location.replace('/addphoto');
+    if(user.role === 'admin') {
+      if(path !== 'admin') {
+        location.replace('/admin')
+      }
+    } else {
+      if (shouldNavigateToHome(user)) {
+        location.replace('/');
+      } else if (!user?.face_img && path !== 'addphoto') {
+        location.replace('/addphoto');
+      }
     }
   }
 
@@ -104,10 +119,10 @@ const App = () =>  {
   }, [])
 
   useEffect(() => {
-    if(user.getAuth || isNotfound) {
+    if(user.getAuth || dashboardNotfound) {
       canUseDashboard()
     }
-  }, [user.getAuth, isNotfound])
+  }, [user.getAuth, dashboardNotfound])
 
   useEffect(() => {
     
@@ -133,7 +148,9 @@ const App = () =>  {
       <HeaderContext.Provider value={{setShowPopup, isLongClicked, setIsLongClicked, isHomepage, user: user.getAuth, showNotificationButton, onlyLogo}}>
 
         <Routes>
-
+          {
+            !isNotfound && 
+            <>
           {/* -------------- Start User -------------- */}
 
             <Route path="/" element={
@@ -173,6 +190,33 @@ const App = () =>  {
                 <Notification setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton} />
               </PrivateLayout>
             } />
+            <Route path="/profile" element={
+              <PrivateLayout>
+                <Profile setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </Profile>
+              </PrivateLayout>
+            } />
+            <Route path="/permits" element={
+              <PrivateLayout>
+                <Permits setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </Permits>
+              </PrivateLayout>
+            } />
+            <Route path="/permits/create" element={
+              <PrivateLayout>
+                <CreatePermits setShowPopup={setShowPopup} setShowNotificationButton={setShowNotificationButton}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </CreatePermits>
+              </PrivateLayout>
+            } />
             <Route path="/addphoto" element={
               <Addphoto checkAuth={checkAuth} setShowPopup={setShowPopup}>
                 {
@@ -188,7 +232,7 @@ const App = () =>  {
             !isForbidden &&
             <>
 
-            {/* -------------- Start Hr -------------- */}
+            {/* --------------- Start Hr -------------- */}
 
             <Route path="hr" element={ <DashboardLayout /> } >
               <Route path="" element={ 
@@ -213,7 +257,7 @@ const App = () =>  {
                 </StatisticHr>
               }/>
               <Route path="statistic/:username" element={
-                <StatisticHr setShowPopup={setShowPopup}>
+                <StatisticHr setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
                   {
                     showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
                   }
@@ -234,14 +278,14 @@ const App = () =>  {
                 </CreateAnnouncementsHr>
               }/>
               <Route path="announcements/:slug" element={
-                <SingleAnnouncementsHr setShowPopup={setShowPopup}>
+                <SingleAnnouncementsHr setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
                   {
                     showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
                   }
                 </SingleAnnouncementsHr>
               }/>
               <Route path="announcements/:slug/edit" element={
-                <EditAnnouncementsHr setShowPopup={setShowPopup}>
+                <EditAnnouncementsHr setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
                   {
                     showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
                   }
@@ -262,7 +306,7 @@ const App = () =>  {
                 </CreateOfficesHr>
               }/>
               <Route path="offices/:id/edit" element={
-                <EditOfficesHr setShowPopup={setShowPopup}>
+                <EditOfficesHr setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
                   {
                     showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
                   }
@@ -283,7 +327,7 @@ const App = () =>  {
                 </CreateSchedulesHr>
               }/>
               <Route path="schedules/:id/edit" element={
-                <EditSchedulesHr setShowPopup={setShowPopup}>
+                <EditSchedulesHr setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
                   {
                     showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
                   }
@@ -304,7 +348,7 @@ const App = () =>  {
                 </CreateWfhSchedulesHr>
               }/>
               <Route path="wfh/schedules/:id/edit" element={
-                <EditWfhSchedulesHr setShowPopup={setShowPopup}>
+                <EditWfhSchedulesHr setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
                   {
                     showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
                   }
@@ -319,9 +363,132 @@ const App = () =>  {
               }/>
             </Route>
 
-            {/* -------------- End Hr -------------- */}
+            {/* --------------- End Hr ---------------- */}
+
+
+            {/* -------------- Start Bod -------------- */}
+
+            <Route path="bod" element={ <DashboardLayout /> } >
+            <Route path="" element={ 
+                <DashboardBod setShowPopup={setShowPopup}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </DashboardBod>
+              } />
+            <Route path="announcements" element={ 
+                <AnnouncementBod setShowPopup={setShowPopup}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </AnnouncementBod>
+              } />
+            <Route path="permits/:id/deny" element={ 
+                <DenyFormBod setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </DenyFormBod>
+              } />
+            <Route path="announcements/:id" element={ 
+                <SingleAnnouncementBod setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </SingleAnnouncementBod>
+              } />
+              <Route path="offices" element={ 
+                <OfficeBod setShowPopup={setShowPopup}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </OfficeBod>
+              } />
+              <Route path="schedules" element={ 
+                <ScheduleBod setShowPopup={setShowPopup}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </ScheduleBod>
+              } />
+              <Route path="wfh/schedules" element={ 
+                <WfhScheduleBod setShowPopup={setShowPopup}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </WfhScheduleBod>
+              } />
+              <Route path="profile" element={
+                <ProfileBod setShowPopup={setShowPopup}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </ProfileBod>
+              }/>
+              
+              <Route path="statistics" element={ 
+                <StatisticsBod setShowPopup={setShowPopup}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </StatisticsBod>
+              } />
+              <Route path="statistic" element={
+                <StatisticBod setShowPopup={setShowPopup}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </StatisticBod>
+              }/>
+              <Route path="statistic/:username" element={
+                <StatisticBod setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
+                  {
+                    showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                  }
+                </StatisticBod>
+              }/>    
+            </Route>
+
+            {/* --------------- End Bod --------------- */}
+
+            {/* ------------- Start Admin ------------- */}
+
+              <Route path="admin" element={ <DashboardLayout />}>
+                <Route path="" element={ 
+                  <DashboardAdmin setShowPopup={setShowPopup}>
+                    {
+                      showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                    }
+                  </DashboardAdmin>
+                } />
+                <Route path="create" element={ 
+                  <CreateAdmin setShowPopup={setShowPopup}>
+                    {
+                      showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                    }
+                  </CreateAdmin>
+                } />
+                <Route path="profile" element={ 
+                  <ProfileAdmin setShowPopup={setShowPopup}>
+                    {
+                      showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                    }
+                  </ProfileAdmin>
+                } />
+                <Route path="edit/:id" element={ 
+                  <EditAdmin setShowPopup={setShowPopup} setIsNotfound={setIsNotfound}>
+                    {
+                      showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+                    }
+                  </EditAdmin>
+                } />
+              </Route>
+
+            {/* -------------- End Admin -------------- */}
 
             </>
+          }
+          </>
           }
 
 
@@ -329,11 +496,18 @@ const App = () =>  {
           {/* -------------- Start Public -------------- */}
 
           <Route path="/login" element={
-            <Login checkAuth={checkAuth} setLoading={setLoading} />
+            <Login checkAuth={checkAuth} />
+          } />
+          <Route path="/forgotpassword" element={
+            <Forgotpassword setShowPopup={setShowPopup}>
+              {
+                showPopup?.show && <Popup title={showPopup?.title} content={showPopup?.content} popupRef={popupRef} slide={showPopup?.slide} handleOutPopup={handleOutPopup} setShowPopup={setShowPopup} />
+              }
+            </Forgotpassword>
           } />
 
           <Route path="/*" element={
-            <NotFound setOnlyLogo={setOnlyLogo} setIsNotfound={setIsNotfound}/>
+            <NotFound setOnlyLogo={setOnlyLogo} setDashboardNotfound={setDashboardNotfound}/>
           }/>
 
 

@@ -10,12 +10,15 @@ use Illuminate\Support\Facades\Validator;
 
 class WfhScheduleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $page = max(1, intval($request->input('page', 1)));
+        $wfhSchedules = WfhSchedule::paginate('10', ["*"], 'page', $page);
+        WfhScheduleResource::collection($wfhSchedules);
         return response()->json([
             'status' => 'successful',
             'message' => 'Schedules successfully gotten',
-            'data' => WfhScheduleResource::collection(WfhSchedule::all())
+            'data' => $wfhSchedules
         ], 200);
     }
 
@@ -27,7 +30,8 @@ class WfhScheduleController extends Controller
         $validator = Validator::make($request->all(), [
             'start_date' => 'date|required',
             'end_date' => 'date|required|after_or_equal:start_date',
-            'status' => 'prohibited'
+            'status' => 'prohibited',
+            'description' => 'required'
         ]);
 
         if($validator->fails()) {

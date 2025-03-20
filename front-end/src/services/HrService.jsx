@@ -18,8 +18,8 @@ class HrService {
     const response = await axios.post(`${BASE_URL_API}${API_ENDPOINTS.HR.MAKEREPORT}`, props)
     return response.data?.data
   } 
-  static async getAnnouncements () {
-    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.ANNOUNCEMENTS}`)
+  static async getAnnouncements (page=1) {
+    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.ANNOUNCEMENTS}?page=${page}`)
     return response.data?.data
   } 
   static async getAnnouncement(slug) {
@@ -38,13 +38,13 @@ class HrService {
     const response = await axios.delete(`${BASE_URL_API}${API_ENDPOINTS.HR.ANNOUNCEMENTS}/${slug}`)
     return response.data
   } 
-  static async getAudiences () {
-    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.AUDIENCES}`)
+  static async getAudiences (page=1) {
+    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.AUDIENCES}?page=${page}`)
     return response.data?.data
   } 
 
-  static async getOffices () {
-    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.OFFICES}`)
+  static async getOffices (page=1) {
+    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.OFFICES}?page=${page}`)
     return response.data?.data
   } 
   static async getOffice (id) {
@@ -64,8 +64,8 @@ class HrService {
     return response.data
   }   
 
-  static async getSchedules () {
-    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.SCHEDULES}`)
+  static async getSchedules (page=1) {
+    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.SCHEDULES}?page=${page}`)
     return response.data?.data
   } 
   static async getSchedule (id) {
@@ -85,8 +85,8 @@ class HrService {
     return response.data
   }   
 
-  static async getWfhSchedules () {
-    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.WFHSCHEDULES}`)
+  static async getWfhSchedules (page=1) {
+    const response = await axios.get(`${BASE_URL_API}${API_ENDPOINTS.HR.WFHSCHEDULES}?page=${page}`)
     return response.data?.data
   } 
   static async getWfhSchedule (id) {

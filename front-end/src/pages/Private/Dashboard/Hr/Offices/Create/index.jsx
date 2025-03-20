@@ -66,7 +66,7 @@ const Create = ({setShowPopup, children}) => {
         </div>
         <div className="col-md-3 mb-3">
           <label htmlFor="targetInput" className="form-label">Tipe Kerja</label>
-          <select className={`form-select ${error?.errors?.work_type ? 'is-invalid' : ''}`} id="targetInput" name='work_type' onChange={handleChange} value={formData.work_type}>
+          <select className={`form-select ${error?.errors?.work_type ? 'is-invalid' : ''}`} id="targetInput" name='work_type' onChange={handleChange} value={formData.work_type} required>
             <option value='wfo'>WFO (Work From Office)</option>
             <option value='wfh'>WFH (Work From Home)</option>
             <option value='wfa'>WFA (Work From Anywhere)</option>

@@ -19,7 +19,8 @@ class AnnouncementResource extends JsonResource
             'slug' => $this->slug,
             'isi_pengumuman'=> $this->content,
             'target_audiens' => isset($this->target_audience) ? ['id' => $this->target_audience ,'username' => $this->user->username] : null,
-            'status' => $this->status
+            'status' => $this->status,
+            'id' => $this->id
         ];
     }
 }

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\Division;
 use Illuminate\Support\Facades\Validator;
 
@@ -20,10 +21,13 @@ class AdminController extends Controller
 
         $key = $request->search;
 
+        $users = User::with('leader.user')->whereLike('username', "%$key%")->orWhereLike('role', "%$key%")->orderBy('id', $order)->paginate($perPage, ['*'], 'page', $page);
+
+        UserResource::collection($users);
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get employee(s)',
-            'data' => User::select(['username', 'role'])->whereLike('username', "%$key%")->orWhereLike('role', "%$key%")->orderBy('id', $order)->paginate($perPage, ['*'], 'page', $page)
+            'data' => $users
         ], 200);
     }
 
@@ -50,7 +54,7 @@ class AdminController extends Controller
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get employee',
-            'data' => User::select(['id', 'username', 'role'])->where('role', 'bod')->get()
+            'data' => Division::with('user')->where('name', 'bod')->get()
         ], 200);
     }
     public function store(Request $request)
@@ -58,8 +62,8 @@ class AdminController extends Controller
         $validator = Validator::make($request->all(), [
             'username' => 'required|min:5|regex:/[A-z0-9_.]+/|unique:users,username',
             'password' => 'required|min:8',
-            'role' => 'required|in:bod,user,hr',
-            'leader_id' => 'integer|exists:divisions,id',
+            'role' => 'required|in:bod,user,hr,admin',
+            'leader_id' => 'integer|exists:divisions,id|required_if:role,hr,user',
             'email' => 'email:dns|required|unique:users,email'
         ]);
 
@@ -123,7 +127,7 @@ class AdminController extends Controller
 
         return response()->json([
             'status' => 'successful',
-            'message' => 'User successfully deleted'
+            'message' => 'Sukses menghapus user!'
         ]);
     }
 

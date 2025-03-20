@@ -78,7 +78,7 @@
   }
   .links {
     display: none;
-    position: absolute;
+    position: fixed;
     inset: 0;
     top: 75px;
     z-index: 01;

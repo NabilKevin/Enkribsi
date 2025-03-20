@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('permits', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('leader_id');
             $table->unsignedBigInteger('office_id')->nullable()->default(null);
             $table->date('date');
             $table->enum('permit_type', ['izin', 'sakit', 'wfh']);
@@ -24,7 +23,6 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('leader_id')->references('id')->on('divisions')->onDelete('cascade');
             $table->foreign('office_id')->references('id')->on('offices')->onDelete('cascade');
         });
     }

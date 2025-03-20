@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
-import { Container, Loading, ModalBoxButton, ModalBox } from '@/components'
-import { TableHr } from "@/components/Dashboard/Hr";
+import { Container, Loading, ModalBoxButton, ModalBox, PaginateButton } from '@/components'
+import { Table } from "@/components/Dashboard/Shared";
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import HrService from '@/services/HrService'
 import { useEffect, useState } from 'react';
@@ -32,6 +32,10 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getSchedules,
     }
   })
 
+  const handleChangePage = (page = 1) => {
+    singleExecute('getSchedules', page)
+  }
+
   useEffect(() => {
     import('@/css/dashboard/hr/schedule/index.css')
     singleExecute('getSchedules')
@@ -51,21 +55,22 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getSchedules,
       </div>
       <hr />
       {
-        data?.getSchedules?.length > 0 ? 
-          <TableHr>
+        data?.getSchedules?.data?.length > 0 ? 
+        <>
+          <Table>
             <thead>
               <tr>
                 <th scope='col'>#</th>
-                <th scope='col' className='text-capitalize'>{data?.getSchedules ? 'Kantor' : ''}</th>
+                <th scope='col' className='text-capitalize'>Kantor</th>
                 <th scope='col'>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {
-                data.getSchedules.map((d, i) => (
+                data.getSchedules.data.map((d, i) => (
                   <tr key={i}>
                     <td>{i+1}</td>
-                    <td className='scroll'>{data?.getSchedules ? d['name'].length > 27 ? d['name'].slice(0,27) + '...' : d['name'] : ''}</td>
+                    <td className='scroll'>{d['name'].length > 27 ? d['name'].slice(0,27) + '...' : d['name']}</td>
                     <td>
                       <ModalBoxButton className="btn btn-dark ms-1 mt-1 btn-action-schedule" callback={() => setModalContent({
                         title: 'Detail Jadwal',
@@ -73,7 +78,7 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getSchedules,
                         (
                           <div className="px-2">
                             {
-                              data?.getSchedules && Object.keys(data?.getSchedules[0]).map((value, i) => 
+                              data?.getSchedules.data && Object.keys(data?.getSchedules.data[0]).map((value, i) => 
                               value !== 'id' && (<div key={i} className="d-flex flex-column gap-1 mb-2">
                                 <span className="fw-medium fs-5 text-capitalize">{value.split('_').join(' ')} :</span>
                                 <span className="text-capitalize">{d?.[value] && typeof(d?.[value]) !== 'object' ? d?.[value] : '-'}{value.toLowerCase() === 'radius' ? 'm' : ''}</span>
@@ -110,7 +115,9 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getSchedules,
                 ))
               }
             </tbody>
-          </TableHr>
+          </Table>
+          <PaginateButton datas={data.getSchedules.links} handleChangePage={handleChangePage} />
+          </>
           :
           <h1 className='text-center'>Tidak ada Jadwal</h1>
       }

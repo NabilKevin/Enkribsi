@@ -1,0 +1,21 @@
+form {
+  max-width: 600px;
+}
+
+
+@media screen and (max-width: 700px) {  
+  .title {
+    font-size: 43px !important;
+  }
+  .container-lg {
+    margin-top: 1.5rem !important;
+  }
+  form.mt-5 {
+    margin-top: 1.5rem !important;
+  }
+}
+
+.py-25 {
+  padding-top: .7rem !important;
+  padding-bottom: .7rem !important;
+}

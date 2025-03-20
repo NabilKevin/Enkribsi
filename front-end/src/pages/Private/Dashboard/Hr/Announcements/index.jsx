@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
-import { Container, Loading, ModalBoxButton, ModalBox } from '@/components'
-import { TableHr } from "@/components/Dashboard/Hr";
+import { PaginateButton, Container, Loading, ModalBoxButton, ModalBox } from '@/components'
+import { Table } from "@/components/Dashboard/Shared";
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import HrService from '@/services/HrService'
 import { useEffect, useState } from 'react';
@@ -32,6 +32,10 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getAnnounceme
     }
   })
 
+  const handleChangePage = (page = 1) => {
+    singleExecute('getAnnouncements', page)
+  }
+
   useEffect(() => {
     import('@/css/dashboard/hr/announcement/index.css')
     singleExecute('getAnnouncements')
@@ -51,21 +55,22 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getAnnounceme
       </div>
       <hr />
       {
-        data?.getAnnouncements?.length > 0 ? 
-          <TableHr>
+        data?.getAnnouncements?.data?.length > 0 ? 
+        <>
+          <Table>
             <thead>
               <tr>
                 <th scope='col'>#</th>
-                <th scope='col' className='text-capitalize'>{data?.getAnnouncements ? Object.keys(data.getAnnouncements[0])[0] : ''}</th>
+                <th scope='col' className='text-capitalize'>Judul</th>
                 <th scope='col'>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {
-                data.getAnnouncements.map((d, i) => (
+                data.getAnnouncements.data.map((d, i) => (
                   <tr key={i}>
                     <td>{i+1}</td>
-                    <td className='scroll'>{data?.getAnnouncements ? d[Object.keys(data.getAnnouncements[0])[0]].length > 27 ? d[Object.keys(data.getAnnouncements[0])[0]].slice(0,27) + '...' : d[Object.keys(data.getAnnouncements[0])[0]] : ''}</td>
+                    <td className='scroll'>{d['judul'].length > 27 ? d['judul'].slice(0,27) + '...' : d['judul']}</td>
                     <td>
                       <a className="btn btn-dark ms-1 btn-action-announcement mt-1" href={`/hr/announcements/${d.slug}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-eye" viewBox="0 0 16 16">
@@ -94,7 +99,9 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getAnnounceme
                 ))
               }
             </tbody>
-          </TableHr>
+          </Table>
+          <PaginateButton datas={data.getAnnouncements.links} handleChangePage={handleChangePage} />
+          </>
           :
           <h1 className='text-center'>Tidak ada pengumuman</h1>
       }

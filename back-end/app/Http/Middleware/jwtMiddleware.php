@@ -18,7 +18,7 @@ class jwtMiddleware
     {
         try {
             // Ambil token dari cookie
-            $token = $request->cookie('jwt_token');
+            $token = $request->cookie('a913h9a0dsj');
 
             if (!$token) {
                 return response()->json(['message' => 'Token not found'], 401);

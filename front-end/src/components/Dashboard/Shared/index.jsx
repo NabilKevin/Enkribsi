@@ -2,18 +2,36 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components"
 
+const HrBodLink = ({page}) => {
+  const path = location.pathname.split('/')[2]?.toLowerCase()
+  return (
+    <>
+      <a href={`/${page}`} className={`px-3 pb-2 pt-3 ${!path ? 'fw-bold' : ''}`} >Dashboard</a>
+      <a href={`/${page}/statistics`} className={`px-3 pb-2 pt-3 ${path?.includes('statistic') ? 'fw-bold' : ''}`}>Statistik</a>
+      <a href={`/${page}/announcements`} className={`px-3 pb-2 pt-3 ${path?.includes('announcement') ? 'fw-bold' : ''}`}>Pengumuman</a>
+      <a href={`/${page}/offices`} className={`px-3 pb-2 pt-3 ${path?.includes('office') ? 'fw-bold' : ''}`}>Kantor</a>
+      <a href={`/${page}/schedules`} className={`px-3 pb-2 pt-3 ${path?.includes('schedule') ? 'fw-bold' : ''}`}>Jadwal Kantor</a>
+      <a href={`/${page}/wfh/schedules`} className={`px-3 pb-2 pt-3 ${path?.includes('wfh') ? 'fw-bold' : ''}`}>Jadwal Wfh</a>
+      <a href={`/${page}/profile`} className={`px-3 pb-2 pt-3 ${path?.includes('profile') ? 'fw-bold' : ''}`}>Profile</a>
+    </>
+  )
+}
+const AdminLink = ({page}) => {
+  const path = location.pathname.split('/')[2]?.toLowerCase()
+  return (
+    <>
+      <a href={`/${page}`} className={`px-3 pb-2 pt-3 ${!path ? 'fw-bold' : ''}`} >Dashboard</a>
+      <a href={`/${page}/profile`} className={`px-3 pb-2 pt-3 ${path?.includes('profile') ? 'fw-bold' : ''}`}>Profile</a>
+    </>
+  )
+}
+
 const Links = ({display, addClass}) => {
-  const path = location.pathname.split('/')[2]
+  const path = location.pathname.split('/')[1].toLowerCase()
   
   return (
-    <div className={`links gap-1 bg-dark ${addClass}`} style={{ display: display }}>
-      <a href="/hr" className={`px-3 pb-2 pt-3 ${!path ? 'fw-bold' : ''}`} >Dashboard</a>
-      <a href="/hr/statistics" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('statistic') ? 'fw-bold' : ''}`}>Statistik</a>
-      <a href="/hr/announcements" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('announcement') ? 'fw-bold' : ''}`}>Pengumuman</a>
-      <a href="/hr/offices" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('office') ? 'fw-bold' : ''}`}>Kantor</a>
-      <a href="/hr/schedules" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('schedule') ? 'fw-bold' : ''}`}>Jadwal Kantor</a>
-      <a href="/hr/wfh/schedules" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('wfh') ? 'fw-bold' : ''}`}>Jadwal Wfh</a>
-      <a href="/hr/profile" className={`px-3 pb-2 pt-3 ${path?.toLowerCase()?.includes('profile') ? 'fw-bold' : ''}`}>Profile</a>
+    <div className={`links gap-1 bg-dark ${addClass ? addClass : ''}`} style={{ display: display }}>
+      {path !== 'admin' ? <HrBodLink page={path} /> : <AdminLink page={path} />} 
     </div>
   )
 }
@@ -93,5 +111,13 @@ export const DateComp = () => {
       <h4>Hari Ini:</h4>
       <h5>{today}</h5>
     </Card>
+  )
+}
+
+export const Table = ({children}) => {
+  return (
+    <table className="table table-hover text-center">
+      {children}
+    </table>
   )
 }

@@ -8,9 +8,9 @@ use App\Models\Office;
 use App\Models\Permit;
 use App\Models\Division;
 use App\Models\Attendance;
-use App\Models\Schedule;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PermitResource;
 use App\Models\WfhSchedule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -200,7 +200,6 @@ class AbsenController extends Controller
             'reason' => 'required|string',
             'permit_type' => 'required|string',
             'date' => 'date|required',
-            'office_id' => 'required_if:permit_type,wfh|int|exists:offices,id',
         ]);
 
         if($validator->fails()) {
@@ -261,9 +260,7 @@ class AbsenController extends Controller
             'user_id' => $request->user()->id,
             'reason' => $data['reason'],
             'permit_type' => $data['permit_type'],
-            'leader_id' => $request->user()->leader_id,
             'date' => $data['date'],
-            'office_id' => isset($data['office_id']) ? $data['office_id'] : null
         ]);
 
         return response()->json([
@@ -391,7 +388,7 @@ class AbsenController extends Controller
 
     public function cancelPermit(Request $request, $id)
     {
-        $permit = Permit::with(['office.schedules'])->find($id);
+        $permit = Permit::find($id);
 
         if(!$permit) {
             return response()->json([
@@ -407,7 +404,13 @@ class AbsenController extends Controller
             ], 403);
         }
 
-        if(Carbon::now()->toDateString() > Carbon::parse($permit->date)->toDateString() || Carbon::now()->toDateString() === Carbon::parse($permit->date)->toDateString() && Carbon::now()->toTimeString() > Carbon::parse($permit->office->schedules->firstWhere('status', 'active')->check_out_time)->toTimeString()) {
+        $office = Office::with('schedules')->where('work_type', 'wfh')->firstWhere('status', 'active');
+        $schedule = $office->schedules->firstWhere('status', 'active');
+
+        if(
+            Carbon::now()->toDateString() > Carbon::parse($permit->date)->toDateString() ||
+            Carbon::now()->toDateString() === Carbon::parse($permit->date)->toDateString() &&
+            Carbon::now()->toTimeString() > Carbon::parse($schedule->check_out_time)->toTimeString()) {
             return response()->json([
                 'status' => 'unsuccessful',
                 'message' => "You can't cancel your permit"
@@ -419,14 +422,16 @@ class AbsenController extends Controller
 
         return response()->json([
             'status' => 'successful',
-            'message' => 'Permit successfully canceled'
+            'message' => 'Sukses cancel izin'
         ], 200);
 
 
     }
     public function getPermits(Request $request)
     {
-        $permits = Permit::where('user_id', $request->user()->id)->get();
+        $page = $request->input('page', 1);
+        $permits = Permit::where('user_id', $request->user()->id)->paginate(10, ['*'], 'page', $page);
+        PermitResource::collection($permits);
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get permits',
@@ -441,5 +446,24 @@ class AbsenController extends Controller
             'message' => 'Successfuly get offices',
             'data' => Office::where('status', 'active')->get()
         ], 200);
+    }
+
+    public function checkPermitAbsen(Request $request)
+    {
+        $permit = Permit::where('user_id', $request->user()->id)->firstWhere('date', Carbon::now()->toDateString());
+        $attendance = Attendance::where('user_id', $request->user()->id)->firstWhere('date', Carbon::now()->toDateString());
+
+        if($permit || $attendance) {
+            return response()->json([
+                'status' => 'successful',
+                'message' => 'Kamu sudah izin/absen hari ini'
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => 'unsuccessful',
+            'message' => 'Kamu belum izin/absen hari ini',
+        ], 404);
+
     }
 }

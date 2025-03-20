@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-const ModalBox = ({children, title, callback = () => {}}) => {
+const ModalBox = ({children, title, callback = () => {}, addButton}) => {
   return (
     <div className="modal fade text-dark" id="modalBox" tabIndex="-1" aria-labelledby="modalBoxLabel" aria-hidden="true">
       <div className="modal-dialog">
@@ -12,6 +12,7 @@ const ModalBox = ({children, title, callback = () => {}}) => {
             {children}
           </div>
           <div className="modal-footer">
+            {addButton}
             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             <button type="button" className="btn btn-danger" data-bs-dismiss="modal" onClick={callback}>Iya</button>
           </div>

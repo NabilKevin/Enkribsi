@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
-import { Container, Loading, ModalBoxButton, ModalBox } from '@/components'
-import { TableHr } from "@/components/Dashboard/Hr";
+import { Container, Loading, ModalBoxButton, ModalBox, PaginateButton } from '@/components'
+import { Table } from "@/components/Dashboard/Shared";
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import HrService from '@/services/HrService'
 import { useEffect, useState } from 'react';
@@ -32,6 +32,10 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getOffices, H
     }
   })
 
+  const handleChangePage = (page = 1) => {
+    singleExecute('getOffices', page)
+  }
+
   useEffect(() => {
     import('@/css/dashboard/hr/office/index.css')
     singleExecute('getOffices')
@@ -51,21 +55,22 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getOffices, H
       </div>
       <hr />
       {
-        data?.getOffices?.length > 0 ? 
-          <TableHr>
+        data?.getOffices?.data?.length > 0 ? 
+        <>
+          <Table>
             <thead>
               <tr>
                 <th scope='col'>#</th>
-                <th scope='col' className='text-capitalize'>{data?.getOffices ? 'nama' : ''}</th>
+                <th scope='col' className='text-capitalize'>Nama</th>
                 <th scope='col'>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {
-                data.getOffices.map((d, i) => (
+                data.getOffices.data.map((d, i) => (
                   <tr key={i}>
                     <td>{i+1}</td>
-                    <td className='scroll'>{data?.getOffices ? d['nama'].length > 27 ? d['nama'].slice(0,27) + '...' : d['nama'] : ''}</td>
+                    <td className='scroll'>{d['nama'].length > 27 ? d['nama'].slice(0,27) + '...' : d['nama']}</td>
                     <td>
                       <ModalBoxButton className="btn btn-dark ms-1 mt-1 btn-action-office" callback={() => setModalContent({
                         title: 'Detail Kantor',
@@ -73,7 +78,7 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getOffices, H
                         (
                           <div className="px-2">
                             {
-                              data?.getOffices && Object.keys(data?.getOffices[0]).map((value, i) => 
+                              data?.getOffices.data && Object.keys(data?.getOffices.data[0]).map((value, i) => 
                               value !== 'id' && (<div key={i} className="d-flex flex-column gap-1 mb-2">
                                 <span className="fw-medium fs-5 text-capitalize">{value.split('_').join(' ')} :</span>
                                 <span className="text-capitalize">{d?.[value] && typeof(d?.[value]) !== 'object' ? d?.[value] : '-'}{value.toLowerCase() === 'radius' ? 'm' : ''}</span>
@@ -110,7 +115,9 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getOffices, H
                 ))
               }
             </tbody>
-          </TableHr>
+          </Table>
+          <PaginateButton datas={data.getOffices.links} handleChangePage={handleChangePage} />
+          </>
           :
           <h1 className='text-center'>Tidak ada Kantor</h1>
       }

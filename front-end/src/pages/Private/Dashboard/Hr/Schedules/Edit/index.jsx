@@ -9,7 +9,7 @@ import { useParams } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const Edit = ({setShowPopup, children}) => {
+const Edit = ({setShowPopup, children, setIsNotfound}) => {
   const {id} = useParams()
   const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
@@ -28,6 +28,9 @@ const Edit = ({setShowPopup, children}) => {
   };
 
   const handleError = e => {
+    if(e.status === 404) {
+      setIsNotfound(true)
+    }
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
     setError(e.response?.data)
   }

@@ -6,7 +6,7 @@ import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import { handleInPopup } from '@/utils/Popup';
 import { Card, Table } from '@/components/User/Statistics'
 
-function Statistics({setShowNotificationButton, setShowPopup}) {
+function Statistics({setShowNotificationButton, setShowPopup, children}) {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState({
     hadir: false,
@@ -111,12 +111,13 @@ function Statistics({setShowNotificationButton, setShowPopup}) {
     import('@/css/user/statistics/index.css')
   }, [])
 
+  if(loading) {
+    return <Loading />
+  }
   return (
     <>
-    {loading && <Loading />}
-    {
-      !loading && 
       <Container size={'-fluid'} marginTop={5} marginBottom={5}>
+        {children}
         <Row>
           <Col size={'-md-6'} addClass={"offset-md-3"}>
             <div>
@@ -153,7 +154,6 @@ function Statistics({setShowNotificationButton, setShowPopup}) {
           </Col>
         </Row>
       </Container>
-    }
     </>
   );
 }

@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UserService from "@/services/UserService";
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import { Loading } from '@/components';
@@ -42,22 +42,26 @@ const Login = ({checkAuth}) => {
     login(formData)
   }
 
+  useEffect(() => {
+    import('@/css/forgotpassword/index.css')
+  }, [])
+
   if(loading) {
     return <Loading />
   }
   
   return (
-      <div className="container d-flex align-items-center gap-4 flex-column p-4 pt-1 mt-5">
-        <div>
-          <h1 className="text-center mb-4">Enkribsi</h1>
-          <p className="text-center text-muted">Smart Attendance For Employee</p>
+      <div className="container d-flex align-items-center gap-4 flex-column p-4 pt-1 mt-4">
+        <div className='mb-4'>
+          <h1 className="text-center title" style={{ fontSize: '50px' }}>Enkribsi</h1>
+          <p className="text-center text-muted" style={{ fontSize: '13px' }}>Smart Attendance For Employee</p>
         </div>
-        <div className="p-4 pt-0 w-100" style={{maxWidth: "600px"}}>
+        <div className="py-4 px-2 pt-0 w-100" style={{maxWidth: "600px"}}>
           {error?.message && <div className="alert alert-danger">
             {error?.message}
           </div>}
           <h3 className="mb-4">Login</h3>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="mb-2">
             <div className="form-floating mb-3">
               <input value={formData.email} onInput={handleChange} autoComplete="off" type="email" className={`form-control ${error?.errors?.email ? 'is-invalid' : ''}`} id="floatingInput" placeholder="email or Email address" name="email" required/>
               <label htmlFor="floatingInput">Email </label>
@@ -82,6 +86,7 @@ const Login = ({checkAuth}) => {
             </div>
                 <button type="submit" className="btn btn-danger w-100">Login</button>
             </form>
+            <span>Lupa password? <a href="/forgotpassword" className="text-dark">klik disini</a></span>
         </div>
     </div>
   );

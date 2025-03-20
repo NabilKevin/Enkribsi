@@ -4,22 +4,23 @@ import { useParams } from "react-router-dom"
 import HrService from '@/services/HrService'
 import { handleInPopup } from '@/utils/Popup';
 import { Loading, Piechart, Barchart, PaginateButton, ModalBox, ModalBoxButton } from '@/components';
-import { TableHr } from "@/components/Dashboard/Hr";
+import { Table } from "@/components/Dashboard/Shared";
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import { Base64 } from "js-base64";
 
-const Statistic = ({children, setShowPopup}) => {
+const Statistic = ({children, setShowPopup, setIsNotfound}) => {
   const {username} = useParams()
   const [loading, setLoading] = useState(true)
   const [graphicData, setGraphicData] = useState({})
   const [chart, setChart] = useState(false)
   const [range, setRange] = useState({range: 'monthly'});
-  const [paginateButton, setPaginateButton] = useState(null)
   const [modalContent, setModalContent] = useState()
 
   const handleErrorUser = e => {
+    if(e.status === 404) {
+      setIsNotfound(true)
+    }
     setGraphicData(null)
-    setPaginateButton(null)
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
   const handleError = e => {
@@ -122,18 +123,10 @@ const Statistic = ({children, setShowPopup}) => {
 
   useEffect(() => {
     if(data.getEmployee) {
+      
       const { ...newObj } = data.getEmployee;
       delete newObj.data;
       setGraphicData(newObj)
-      
-      setPaginateButton([...data.getEmployee.data.links].map((link) => 
-        (
-          {
-            page: link.url ? link.url.split('?page=')[1] : link.url, 
-            label: link.label
-          }
-        )
-      ))
     }
     
   }, [data.getEmployee])
@@ -213,7 +206,7 @@ return (
         graphicData && <>
           <hr />
           <div className="p-0">
-            <TableHr>
+            <Table>
               <thead>
                 <tr>
                   <th scope="col">#</th>
@@ -235,10 +228,8 @@ return (
                   ))
                 }
               </tbody>
-            </TableHr>
-            {
-              paginateButton && paginateButton.length > 3 && <PaginateButton data={paginateButton} handleChangePage={handleChangePage} />
-            }
+            </Table>
+            <PaginateButton datas={data.getEmployee.data.links} handleChangePage={handleChangePage} />
           </div>
           <ModalBox title='Detail Kehadiran'>
           <div className="px-2">

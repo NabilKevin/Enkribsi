@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
-const Row = ({children}) => {
+const Row = ({children, addClass}) => {
   return (
-      <div className="row">
+      <div className={`row${addClass ? ' ' + addClass : ''}`}>
           {children}
       </div>
   )

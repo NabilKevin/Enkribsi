@@ -6,12 +6,15 @@ import { Loading, Card, Container } from "@/components"
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import HrService from "@/services/HrService"
 
-const Single = ({setShowPopup}) => {
+const Single = ({setShowPopup, children, setIsNotfound}) => {
   const [loading, setLoading] = useState(true)
 
   const {slug} = useParams()
 
   const handleError = e => {
+    if(e.status === 404) {
+      setIsNotfound(true)
+    }
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
 
@@ -48,10 +51,6 @@ const Single = ({setShowPopup}) => {
     fetch_data()
     import('@/css/dashboard/hr/announcement/single/index.css')
   }, [])
-  useEffect(() => {
-    console.log(announcement.getAnnouncement);
-    
-  }, [announcement])
 
   if(loading) {
     return <Loading />
@@ -59,14 +58,18 @@ const Single = ({setShowPopup}) => {
   return (
     <>
       <Container size={'-lg'} marginTop={4}>
-        <Card addClass={'shadow p-4'} >
-          <h1 className="text-center mb-4">{announcement?.getAnnouncement?.judul}</h1>
-          <div className="mb-4 d-flex w-100 justify-content-around my-4">
-            <span className="desc-span fs-5 text-capitalize">Target audiens: <strong>{!announcement?.getAnnouncement?.target_audiens ? 'Semua' : announcement.getAnnouncement.target_audiens.username}</strong></span>
-            <span className="desc-span fs-5 text-capitalize">Status: {formatStatus(announcement?.getAnnouncement?.status)}</span>
-          </div>
-          <div dangerouslySetInnerHTML={{ __html: announcement?.getAnnouncement?.isi_pengumuman}}></div>
-        </Card>
+        {children}
+        {
+          announcement?.getAnnouncement &&
+          <Card addClass={'shadow p-4'} >
+            <h1 className="text-center mb-4">{announcement?.getAnnouncement?.judul}</h1>
+            <div className="mb-4 d-flex w-100 justify-content-around my-4">
+              <span className="desc-span fs-5 text-capitalize">Target audiens: <strong>{!announcement?.getAnnouncement?.target_audiens ? 'Semua' : announcement.getAnnouncement.target_audiens.username}</strong></span>
+              <span className="desc-span fs-5 text-capitalize">Status: {formatStatus(announcement?.getAnnouncement?.status)}</span>
+            </div>
+            <div dangerouslySetInnerHTML={{ __html: announcement?.getAnnouncement?.isi_pengumuman}}></div>
+          </Card>
+        }
       </Container>
     </>
   )

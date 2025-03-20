@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Loading, PaginateButton } from "@/components";
-import { TableHr } from "@/components/Dashboard/Hr";
+import { Table } from "@/components/Dashboard/Shared";
 import HrService from "@/services/HrService";
 import { handleInPopup } from '@/utils/Popup';
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 
 const Statistics = ({children, setShowPopup}) => {
   const [loading, setLoading] = useState(true)
-  const [paginateButton, setPaginateButton] = useState(null)
   const [search, setSearch] = useState('')
 
   const handleErrorEmployees = e => {
@@ -36,12 +35,6 @@ const Statistics = ({children, setShowPopup}) => {
     setEmployees()
   }, [])
 
-  useEffect(() => {
-    if(employees.getEmployees) {
-      setPaginateButton([...employees.getEmployees.links].map((link) => ({page: link.url ? link.url.split('?page=')[1] : link.url, label: link.label, search: link.url ? link.url.split('?search=')[1] : link.url})))
-    }
-  }, [employees.getEmployees])
-
   if(loading) {
     return <Loading />
   }
@@ -58,7 +51,7 @@ const Statistics = ({children, setShowPopup}) => {
       { 
         employees?.getEmployees?.data ? 
         <>
-          <TableHr>
+          <Table>
             <thead>
               <tr>
                 {
@@ -85,10 +78,8 @@ const Statistics = ({children, setShowPopup}) => {
                 ))
               }
             </tbody>
-          </TableHr>
-          {
-            paginateButton && paginateButton.length > 3 && <PaginateButton data={paginateButton} handleChangePage={handleChangePage} />
-          }
+          </Table>
+          <PaginateButton datas={employees.getEmployees.links} handleChangePage={handleChangePage} />
         </>
         : 
           <h1>Tidak ada karyawan</h1>

@@ -18,3 +18,12 @@
   outline: none;
   border: none;
 }
+
+.timeHeader {
+  font-size: .85rem !important;
+  font-weight: bold;
+}
+
+.jam {
+  gap: 0.75rem !important;
+}

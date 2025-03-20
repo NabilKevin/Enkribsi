@@ -13,5 +13,11 @@
 }
 
 #root {
-  padding-top: 50px;
+  padding-top: 115px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.card-status .fs-7 {
+  font-size: .8rem !important;
 }

@@ -13,12 +13,15 @@ class OfficeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $page = max(1, intval($request->input('page', 1)));
+        $offices = Office::paginate('10', ["*"], 'page', $page);
+        OfficeResource::collection($offices);
         return response()->json([
             'status' => 'successful',
             'message' => 'Offices successfully gotten',
-            'data' => OfficeResource::collection(Office::all())
+            'data' => $offices
         ], 200);
     }
 

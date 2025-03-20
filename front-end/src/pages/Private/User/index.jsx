@@ -3,5 +3,8 @@ export { default as Addphoto } from "./Addphoto";
 export { default as Absen } from "./Absen";
 export { default as Statistics } from "./Statistics";
 export { default as Notifications } from "./Notifications";
+export { default as Permits } from "./Permits";
+export { default as CreatePermits } from "./Permits/Create";
 export { default as Notification } from "./Notification";
+export { default as Profile } from "./Profile";
 export { default as PrivateLayout } from "./PrivateLayout";

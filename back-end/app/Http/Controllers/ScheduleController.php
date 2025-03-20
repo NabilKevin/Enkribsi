@@ -13,12 +13,15 @@ class ScheduleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $page = max(1, intval($request->input('page', 1)));
+        $schedules = Schedule::with('office')->paginate('10', ["*"], 'page', $page);
+        ScheduleResource::collection($schedules);
         return response()->json([
             'status' => 'successful',
             'message' => 'Schedules successfully gotten',
-            'data' => ScheduleResource::collection(Schedule::with('office')->get())
+            'data' => $schedules
         ], 200);
     }
 

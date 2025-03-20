@@ -5,7 +5,7 @@ import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import UserService from "@/services/UserService"
 import { handleInPopup } from "@/utils/Popup"
 
-const Profile = ({setShowPopup}) => {
+const Profile = ({setShowPopup, children}) => {
   const [loading, setLoading] = useState(true)
 
   const handleError = e => {
@@ -37,6 +37,7 @@ const Profile = ({setShowPopup}) => {
   }
   return (
     <Container addClass='d-flex flex-column gap-4'>
+      {children}
       <div className="rounded-circle align-self-center bg-secondary p-5">
         <svg xmlns="http://www.w3.org/2000/svg" fill="white" className="bi bi-person-fill" viewBox="0 0 16 16">
           <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>

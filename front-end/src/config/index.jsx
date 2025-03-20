@@ -1,5 +1,5 @@
-// export const BASE_URL = 'http://localhost:8000'
-export const BASE_URL = 'http://192.168.3.8:8000'
+export const BASE_URL = 'http://localhost:8000'
+// export const BASE_URL = 'http://192.168.3.8:8000'
 // export const BASE_URL = 'http://192.168.100.205:8000'
 export const BASE_URL_API = `${BASE_URL}/api`
 export const API_ENDPOINTS = {
@@ -18,7 +18,17 @@ export const API_ENDPOINTS = {
     PULANG: '/leave',
     NOTIFICATIONS: '/notifications',
     DELETENOTIF: '/notifications',
-    NOTIFICATIONCOUNT: '/notifications/count'
+    NOTIFICATIONCOUNT: '/notifications/count',
+    PERMITS: '/permits',
+    CHECKABSENT: '/checkabsent',
+
+    FORGOTPASSWORD: {
+      SUBMITEMAIL: '/auth/forgotpassword',
+      SUBMITTOKEN: '/auth/forgotpasswordtoken',
+      CHANGEPASSWORD: '/auth/resetpassword',
+      CHECKSUBMITEMAIL: '/auth/checksubmit/email',
+      CHECKSUBMITCODE: '/auth/checksubmit/verifcode'
+    }
   },
   HR: {
     PERMITS: '/hr/permits/today',
@@ -29,5 +39,19 @@ export const API_ENDPOINTS = {
     SCHEDULES: '/hr/schedules',
     WFHSCHEDULES: '/hr/wfh/schedules',
     AUDIENCES: '/hr/audiences',
+  },
+  BOD: {
+    PERMITS: '/bod/permits',
+    ANNOUNCEMENTS: '/bod/announcements',
+    OFFICES: '/bod/offices',
+    SCHEDULES: '/bod/schedules',
+    WFHSCHEDULES: '/bod/wfh/schedules',
+    STATISTICS: '/bod/statistics',
+    PENDINGS: '/pendings',
+    EMPLOYEES: '/bod/employees'
+  },
+  ADMIN: {
+    EMPLOYEES: '/admin/employees',
+    BODS: '/admin/bods'
   }
 }

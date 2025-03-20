@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
-import { Container, Loading, ModalBoxButton, ModalBox } from '@/components'
-import { TableHr } from "@/components/Dashboard/Hr";
+import { Container, Loading, ModalBoxButton, ModalBox, PaginateButton } from '@/components'
+import { Table } from "@/components/Dashboard/Shared";
 import { useMultipleFetch } from '@/hooks/useMultipleFetch';
 import HrService from '@/services/HrService'
 import { useEffect, useState } from 'react';
@@ -32,6 +32,10 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getWfhSchedul
     }
   })
 
+  const handleChangePage = (page = 1) => {
+    singleExecute('getWfhSchedules', page)
+  }
+
   useEffect(() => {
     import('@/css/dashboard/hr/wfhschedule/index.css')
     singleExecute('getWfhSchedules')
@@ -51,21 +55,22 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getWfhSchedul
       </div>
       <hr />
       {
-        data?.getWfhSchedules?.length > 0 ? 
-          <TableHr>
+        data?.getWfhSchedules?.data?.length > 0 ? 
+        <>
+          <Table>
             <thead>
               <tr>
                 <th scope='col'>#</th>
-                <th scope='col' className='text-capitalize'>{data?.getWfhSchedules ? 'Tanggal awal' : ''}</th>
+                <th scope='col' className='text-capitalize'>Deskripsi</th>
                 <th scope='col'>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {
-                data.getWfhSchedules.map((d, i) => (
+                data.getWfhSchedules.data.map((d, i) => (
                   <tr key={i}>
                     <td>{i+1}</td>
-                    <td className='scroll'>{data?.getWfhSchedules ? d['tanggal_awal'].length > 27 ? d['tanggal_awal'].slice(0,27) + '...' : d['tanggal_awal'] : ''}</td>
+                    <td className='scroll'>{d['deskripsi'].length > 27 ? d['deskripsi'].slice(0,27) + '...' : d['deskripsi']}</td>
                     <td>
                       <ModalBoxButton className="btn btn-dark ms-1 mt-1 btn-action-Wfhschedule" callback={() => setModalContent({
                         title: 'Detail Jadwal WFH',
@@ -73,7 +78,7 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getWfhSchedul
                         (
                           <div className="px-2">
                             {
-                              data?.getWfhSchedules && Object.keys(data?.getWfhSchedules[0]).map((value, i) => 
+                              data?.getWfhSchedules.data && Object.keys(data?.getWfhSchedules.data[0]).map((value, i) => 
                               value !== 'id' && (<div key={i} className="d-flex flex-column gap-1 mb-2">
                                 <span className="fw-medium fs-5 text-capitalize">{value.split('_').join(' ')} :</span>
                                 <span className="text-capitalize">{d?.[value] && typeof(d?.[value]) !== 'object' ? d?.[value] : '-'}{value.toLowerCase() === 'radius' ? 'm' : ''}</span>
@@ -110,7 +115,9 @@ const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getWfhSchedul
                 ))
               }
             </tbody>
-          </TableHr>
+          </Table>
+          <PaginateButton datas={data.getWfhSchedules.links} handleChangePage={handleChangePage} />
+          </>
           :
           <h1 className='text-center'>Tidak ada Jadwal WFH</h1>
       }

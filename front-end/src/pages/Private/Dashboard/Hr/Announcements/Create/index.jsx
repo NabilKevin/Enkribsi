@@ -47,9 +47,6 @@ const Create = ({setShowPopup, children}) => {
       delete data.target_audience
     }
 
-    console.log(data);
-    
-    
     singleExecute('createAnnouncement', data)
     
   }

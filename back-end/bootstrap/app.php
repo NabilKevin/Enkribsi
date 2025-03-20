@@ -24,5 +24,6 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })->withSchedule(function(Schedule $schedule){
         $schedule->command('app:check-absent')->dailyAt('23:59')->weekdays();
+        $schedule->command('app:check-permits')->dailyAt('23:59')->weekdays();
         $schedule->command('app:reminder-absen')->dailyAt('10:00')->weekdays();
     })->create();

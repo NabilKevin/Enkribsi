@@ -48,6 +48,10 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(Attendance::class, 'user_id', 'id');
     }
+    public function leader()
+    {
+        return $this->belongsTo(Division::class, 'leader_id', 'id');
+    }
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.

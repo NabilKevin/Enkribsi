@@ -13,12 +13,15 @@ class AnnouncementController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $page = max(1, intval($request->input('page', 1)));
+        $announcements = Announcement::with('user')->paginate('10', ["*"], 'page', $page);
+        AnnouncementResource::collection($announcements);
         return response()->json([
             'status' => 'successful',
             'message' => 'Announcements successfully gotten',
-            'data' => AnnouncementResource::collection(Announcement::with('user')->get())
+            'data' => $announcements
         ], 200);
     }
 

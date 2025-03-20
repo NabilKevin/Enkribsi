@@ -15,8 +15,9 @@ class TodayPermitsResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'user_username' => $this->user->username,
-            'leader_username' => $this->leader->user->username,
+            'leader_username' => $this->user->leader->user->username,
             'office_name' => $this->office ? $this->office->name : null,
             'date' => $this->date,
             'permit_type' => $this->permit_type,

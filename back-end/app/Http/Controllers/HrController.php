@@ -25,8 +25,11 @@ use App\Models\Division;
 
 class HrController extends Controller
 {
-    public function getTodayPermits()
+    public function getTodayPermits(Request $request)
     {
+        $page = max(1, intval($request->input('page', 1)));
+        $permits = Permit::with(['user.leader.user', 'office'])->where('date', Carbon::now()->toDateString())->paginate(10, ['*'], 'page', $page);
+        TodayPermitsResource::collection($permits);
         return response()->json([
             'status' => 'successful',
             'message' => 'Successfully get permits',
@@ -40,7 +43,7 @@ class HrController extends Controller
                      'leader_reason' => 'Alasan Atasan (jika ditolak)',
                      'status' => 'Status',
                 ],
-                'permits' => TodayPermitsResource::collection(Permit::with(['user', 'leader.user', 'office'])->where('date', Carbon::now()->toDateString())->get())
+                'permits' => $permits
             ]
         ], 200);
     }
@@ -215,12 +218,14 @@ class HrController extends Controller
 
         $absensi = [
             "Nama_Karyawan" => [],
-            "Tanggal" => [],
+            "Tanggal_Masuk" => [],
+            "Tanggal_Pulang" => [],
             "Jam_Masuk" => [],
             "Jam_Pulang" => [],
             "Status_Kehadiran" => [],
             "Durasi_Kerja" => [],
             "Keterlambatan" => [],
+            "Lembur" => []
         ];
 
         function formatTime($seconds) {
@@ -245,7 +250,8 @@ class HrController extends Controller
 
         foreach ($attendances as $attendance) {
             $absensi["Nama_Karyawan"][] = $attendance->user->username;
-            $absensi["Tanggal"][] = $attendance->date;
+            $absensi["Tanggal_Masuk"][] = $attendance->check_in_date;
+            $absensi["Tanggal_Pulang"][] = $attendance->check_out_date;
             $checkInTime = $attendance->check_in_time;
             $checkOutTime = $attendance->check_out_time;
             $absensi["Jam_Masuk"][] = $checkInTime;
@@ -255,8 +261,8 @@ class HrController extends Controller
             $absensi["Status_Kehadiran"][] = $status;
 
             if ($checkInTime && $checkOutTime) {
-                $durationInSeconds = Carbon::parse($checkInTime)->diffInSeconds(Carbon::parse($checkOutTime));
-                $absensi["Durasi_Kerja"][] = formatTime($durationInSeconds);
+                $durationInSeconds = Carbon::parse($attendance->check_out_date . ' ' . $checkOutTime)->valueOf() - Carbon::parse($attendance->check_in_date . ' ' . $checkInTime)->valueOf();
+                $absensi["Durasi_Kerja"][] = formatTime($durationInSeconds / 1000);
 
                 $schedule = $attendance->office->schedules->firstWhere('status', 'active');
                 if ($schedule) {
@@ -264,15 +270,27 @@ class HrController extends Controller
                     $actualCheckIn = Carbon::parse($checkInTime);
                     $latenessInSeconds = max(0, $scheduledCheckIn->diffInSeconds($actualCheckIn));
 
+                    $scheduledCheckOut = Carbon::parse($attendance->check_out_date . ' ' . $schedule->check_out_time)->valueOf();
+                    $actualCheckOut = Carbon::parse($attendance->check_out_date . ' ' . $checkOutTime)->valueOf();
+                    $lembur = max(0, ($actualCheckOut - $scheduledCheckOut) / 1000);
+
                     $absensi["Keterlambatan"][] = $latenessInSeconds === 0
                         ? "Tidak telat"
                         : formatTime($latenessInSeconds);
+
+                    $absensi["Lembur"][] = $lembur === 0
+                        ? "Tidak lembur"
+                        : formatTime($lembur);
+
+
                 } else {
                     $absensi["Keterlambatan"][] = null;
+                    $absensi["Lembur"][] = null;
                 }
             } else {
                 $absensi["Durasi_Kerja"][] = null;
                 $absensi["Keterlambatan"][] = null;
+                $absensi["Lembur"][] = null;
             }
         }
 

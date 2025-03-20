@@ -5,21 +5,25 @@ import { handleInPopup } from '@/utils/Popup'
 import { Card, Loading} from "@/components"
 import HrService from "@/services/HrService"
 import { DateComp } from "@/components/Dashboard/Shared"
-import { ModalBox, ModalBoxButton } from "@/components/"
+import { ModalBox, ModalBoxButton, PaginateButton } from "@/components/"
 
-const Home = ({setShowPopup}) => {
+const Home = ({setShowPopup, children}) => {
   const [loading, setLoading] = useState(true)
   const [modalContent, setModalContent] = useState({})
 
-  const handleErrorPermits = e => {
+  const handleError = e => {
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
   }
 
   const { data: permits, execute: setPermits } = useMultipleFetch({fetchs: [HrService.getPermitsHr], setLoading,
     errorCallbackMap: {
-      getPermitsHr: handleErrorPermits
+      getPermitsHr: handleError
     }
   })
+
+  const handleChangePage = (page = 1) => {
+    setPermits(page)
+  }
 
   const fetch_data = () => {
     setPermits()
@@ -34,12 +38,17 @@ const Home = ({setShowPopup}) => {
   }
   return (
     <>
+    {children}
     <DateComp />
     <Card addClassBody="p-4">
       <h5 className="mb-4">Permintaan Izin Hari Ini</h5>
-      {permits?.getPermitsHr?.keys && permits?.getPermitsHr?.permits ? permits?.getPermitsHr?.permits.length === 0 ? 
+      {permits?.getPermitsHr?.keys && permits?.getPermitsHr?.permits?.data ? permits?.getPermitsHr?.permits?.data?.length === 0 ? 
+      <>
+      <hr />
       <h2 className="text-center mt-4">Tidak ada permintaan izin hari ini</h2>
+      </>
        : 
+       <>
        <table className="table table-dark text-center">
         <thead>
           <tr>
@@ -52,7 +61,7 @@ const Home = ({setShowPopup}) => {
         </thead>
         <tbody>
           {
-            permits?.getPermitsHr?.permits?.map((permit, i) => (
+            permits?.getPermitsHr?.permits?.data?.map((permit, i) => (
               <tr key={i}>
                 {
                   Object.keys(permits?.getPermitsHr?.keys).map((value, ii) => 
@@ -70,6 +79,8 @@ const Home = ({setShowPopup}) => {
           }
         </tbody>
       </table>
+      <PaginateButton datas={permits.getPermitsHr.links} handleChangePage={handleChangePage} bgdark={true} />
+      </>
       : 
       <></>
       } 

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { handleInPopup } from '@/utils/Popup';
 import { useParams } from 'react-router-dom';
 
-const Edit = ({setShowPopup, children}) => {
+const Edit = ({setShowPopup, children, setIsNotfound}) => {
   const {slug} = useParams()
   const [loading, setLoading] = useState(true)
   const [content, setContent] = useState()
@@ -15,6 +15,13 @@ const Edit = ({setShowPopup, children}) => {
     target_audience: ''
   })
   const [error, setError] = useState({})
+
+  const handleErrorAnnouncement = e => {
+    if(e.status === 404) {
+      setIsNotfound(true)
+    }
+    handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
+  }
 
   const handleError = e => {
     handleInPopup({title: 'Peringatan!', content: e.response.data?.message, setShowPopup})
@@ -33,7 +40,7 @@ const Edit = ({setShowPopup, children}) => {
   }
   const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.getAnnouncement, HrService.getAudiences, HrService.editAnnouncement], setLoading, 
     errorCallbackMap: {
-      getAnnouncement: handleError,
+      getAnnouncement: handleErrorAnnouncement,
       editAnnouncement: handleError,
       getAudiences: handleError
     },
