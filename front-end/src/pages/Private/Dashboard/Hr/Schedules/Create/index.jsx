@@ -32,10 +32,10 @@ const Create = ({setShowPopup, children}) => {
   const handleSuccess = () => {
     location.replace('/hr/schedules')
   }
-  const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.createSchedule, HrService.getOffices], setLoading, 
+  const {data, singleExecute} = useMultipleFetch({fetchs: [HrService.createSchedule, HrService.getSchedule], setLoading, 
     errorCallbackMap: {
       createSchedule: handleError,
-      getOffices: handleError
+      getSchedule: handleError
     },
     successCallbackMap: {
       createSchedule: handleSuccess
@@ -68,7 +68,7 @@ const Create = ({setShowPopup, children}) => {
 
   useEffect(() => {
     import('@/css/dashboard/hr/schedule/index.css')
-    singleExecute('getOffices')
+    singleExecute('getSchedule')
   }, [])
 
   if(loading) {
@@ -85,7 +85,7 @@ const Create = ({setShowPopup, children}) => {
           <label htmlFor="targetInput" className="form-label">Kantor</label>
           <select className={`form-select ${error?.errors?.office_id ? 'is-invalid' : ''}`} id="targetInput" name='office_id' onChange={handleChange} value={formData.office_id}>
             {
-              data?.getOffices && data.getOffices.map((office, i) => (
+              data?.getSchedule && data.getSchedule.map((office, i) => (
                 <option key={i} value={office?.id}>{office?.name}</option>
               ))
             }

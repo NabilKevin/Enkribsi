@@ -76,7 +76,7 @@ def generateExcell():
 
     # Validasi apakah data adalah JSON object
     if not isinstance(data, dict):
-        return jsonify({'error': 'Data harus berupa JSON object'}), 400
+        return jsonify({'message': 'Data harus berupa JSON object'}), 400
 
     # Konversi data JSON menjadi DataFrame
     df_absensi = pd.DataFrame(data['absensi'])
@@ -109,9 +109,9 @@ def is_face_facing_camera():
     data = request.json
 
     if not isinstance(data, dict):
-      return jsonify({'error': 'Data harus berupa JSON object'}), 400
+      return jsonify({'message': 'Data harus berupa JSON object'}), 400
     if 'image' not in data:
-      return jsonify({'error': 'Field "image" harus ada'}), 404
+      return jsonify({'message': 'Field "image" harus ada'}), 404
     
     decoded_data = base64.b64decode(data['image'])
 
@@ -137,9 +137,6 @@ def is_face_facing_camera():
 
     # Get facial landmarks
     landmarks = predictor(gray, face)
-
-    if is_face_covered(image, landmarks):
-        return jsonify({"message": "Wajah tertutup oleh objek seperti masker, kacamata, atau topi.", 'status': "unsuccessful"}), 422
 
     # Extract key points for orientation analysis
     left_eye = (landmarks.part(36).x, landmarks.part(36).y)  # Left eye corner

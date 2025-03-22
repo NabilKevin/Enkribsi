@@ -37,7 +37,7 @@ class UserController extends Controller
         if($response->failed()) {
             return response()->json([
                 'status' => 'unsuccessful',
-                'message' => $response->json()->message
+                'message' => $response->json()['message']
             ], $response->status());
         }
 
